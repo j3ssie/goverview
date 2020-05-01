@@ -17,6 +17,7 @@ func CalcCheckSum(options Options, url string) string {
 		ErrorF("Error sending: %v", url)
 		return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, hash, contentFile)
 	}
+
 	// store response
 	content := res.BeautifyHeader
 	if options.SaveReponse {
@@ -36,6 +37,9 @@ func CalcCheckSum(options Options, url string) string {
 	}
 	result = GenHash(res.Body)
 	title = GetTitle(doc)
+
+	// wordlist builder
+	BuildWordlists(options, doc)
 
 	// calculate Hash based on level
 	switch options.Level {

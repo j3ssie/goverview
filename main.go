@@ -28,6 +28,7 @@ func main() {
 	commands.Flags().StringVarP(&options.Output, "output", "o", "out", "Output Directory")
 	commands.Flags().StringVarP(&options.ScreenShotFile, "screenshot", "S", "", "Summary File for Screenshot (default 'out/content-summary.txt')")
 	commands.Flags().StringVarP(&options.ContentFile, "content", "C", "", "Summary File for Content (default 'out/screenshot-summary.txt')")
+	commands.Flags().StringVarP(&options.WordList, "wordlist", "W", "", "Wordlists File build from HTTP Content (default 'out/wordlists.txt')")
 	// mics options
 	commands.Flags().BoolVarP(&options.SkipScreen, "skip-screen", "Q", false, "Skip screenshot")
 	commands.Flags().BoolVar(&options.SkipProbe, "skip-probe", false, "Skip probing for checksum")
@@ -140,18 +141,24 @@ func prepareOutput() {
 	if options.ContentFile == "" {
 		options.ContentFile = path.Join(options.Output, "content-summary.txt")
 	}
+	if options.WordList == "" {
+		options.WordList = path.Join(options.Output, "wordlists.txt")
+	}
 }
 
 func printOutput() {
+	// unique the content of wordlist file
+	core.CleanWords(options.WordList)
+
 	// print output
-	if core.FileExists(options.CheckSumFile) {
-		core.GoodF("Store checksum summary in: %v", options.CheckSumFile)
+	if core.FileExists(options.ContentFile) {
+		core.GoodF("Checksum summary in: %v", options.ContentFile)
+	}
+	if core.FileExists(options.WordList) {
+		core.GoodF("Wordlists summary in: %v", options.WordList)
 	}
 	if core.FileExists(options.ScreenShotFile) {
-		core.GoodF("Store screenshot summary in: %v", options.ScreenShotFile)
-	}
-	if core.FileExists(options.ContentFile) {
-		core.GoodF("Store screenshot summary in: %v", options.ContentFile)
+		core.GoodF("Screenshot summary in: %v", options.ScreenShotFile)
 	}
 }
 
@@ -166,6 +173,7 @@ func HelpMessage(_ *cobra.Command, _ []string) {
   -o, --output string       Output Directory (default "out")
   -S, --screenshot string   Summary File for Screenshot (default 'out/content-summary.txt')
   -C, --content string      Summary File for Content (default 'out/screenshot-summary.txt')
+  -W, --wordlist string     Wordlists File build from HTTP Content (default 'out/wordlists.txt')
   -Q, --skip-screen         Skip screenshot
       --skip-probe          Skip probing for checksum
   -M, --save-response       Save HTTP response

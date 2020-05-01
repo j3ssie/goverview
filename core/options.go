@@ -8,6 +8,7 @@ type Options struct {
 	ScreenShotFile string
 	CheckSumFile   string
 	ContentFile    string
+	WordList       string
 	LogFile        string
 	Concurrency    int
 	Threads        int
