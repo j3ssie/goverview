@@ -95,7 +95,7 @@ func run(cmd *cobra.Command, args []string) {
 					imgScreen := core.DoScreenshot(options, job)
 					if imgScreen != "" {
 						core.InforF("Store image: %v %v", job, imgScreen)
-						sum := fmt.Sprintf("%v - %v", job, imgScreen)
+						sum := fmt.Sprintf("%v ;; %v", job, imgScreen)
 						core.AppendTo(options.ScreenShotFile, sum)
 					}
 				}
@@ -162,6 +162,7 @@ func printOutput() {
 	}
 }
 
+// HelpMessage print help message
 func HelpMessage(_ *cobra.Command, _ []string) {
 	h := fmt.Sprintf("goverview - Overview about list of URLs - %v by %v", core.VERSION, core.AUTHOR)
 	h += "\n\nUsage:\n"
@@ -187,7 +188,7 @@ func HelpMessage(_ *cobra.Command, _ []string) {
       --debug               Debug output
   -V, --version             Check version
   -h, --help                help for goverview`
-	h += "\n\nChecksum Content Level\n"
+	h += "\n\nChecksum Content Level:\n"
 	h += "  0 - Only check for src in <script> tag\n"
 	h += "  1 - Check for all structure of HTML tag + src in <script> tag\n"
 	h += "  2 - Check for all structure of HTML tag + src in <script> <img> <a> tag\n"
@@ -197,6 +198,7 @@ func HelpMessage(_ *cobra.Command, _ []string) {
 	h += "  cat list_of_urls.txt | goverview -l 1\n"
 	h += "  cat list_of_urls.txt | goverview -v -Q -l 1\n"
 	h += "  cat list_of_urls.txt | goverview -v -Q -M -l 2\n"
+	h += "  cat list_of_urls.txt | goverview --skip-probe -o overview -S overview/target-screen.txt\n"
 	h += "\n"
 	fmt.Printf(h)
 }
