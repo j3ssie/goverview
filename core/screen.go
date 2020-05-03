@@ -35,7 +35,7 @@ func DoScreenshot(options Options, raw string) string {
 	allocCtx, bcancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer bcancel()
 	ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
-	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel = context.WithTimeout(ctx, time.Duration(options.Timeout)*time.Second)
 	defer cancel()
 
 	// capture screenshot of an element

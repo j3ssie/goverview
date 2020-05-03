@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/j3ssie/osmedeus/utils"
 	"path"
 	"strings"
 )
@@ -13,7 +14,9 @@ func CalcCheckSum(options Options, url string) string {
 	hash := "No-CheckSum"
 	contentFile := "No-Content"
 	res, err := JustSend(options, url)
-	if err != nil {
+	utils.DebugF("Headers: ", res.BeautifyHeader)
+	utils.DebugF("Body: ", res.Beautify)
+	if err != nil && res.StatusCode == 0 {
 		ErrorF("Error sending: %v", url)
 		return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, hash, contentFile)
 	}

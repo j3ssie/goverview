@@ -52,12 +52,11 @@ func JustSend(options Options, url string) (res Response, err error) {
 	client.SetRetryWaitTime(time.Duration(timeout/2) * time.Second)
 	client.SetRetryMaxWaitTime(time.Duration(timeout) * time.Second)
 	timeStart := time.Now()
+
 	// redirect policy
 	if options.Redirect == false {
 		client.SetRedirectPolicy(resty.RedirectPolicyFunc(func(req *http.Request, via []*http.Request) error {
 			// keep the header the same
-			// client.SetHeaders(headers)
-
 			res.StatusCode = req.Response.StatusCode
 			res.Status = req.Response.Status
 			resp := req.Response
@@ -71,7 +70,6 @@ func JustSend(options Options, url string) (res Response, err error) {
 			var resHeaders []map[string]string
 			for k, v := range resp.Header {
 				element := make(map[string]string)
-				//fmt.Printf("%v: %v\n", k, v)
 				element[k] = strings.Join(v[:], "")
 				resLength += len(fmt.Sprintf("%s: %s\n", k, strings.Join(v[:], "")))
 				resHeaders = append(resHeaders, element)
@@ -93,6 +91,7 @@ func JustSend(options Options, url string) (res Response, err error) {
 			res.Length = resLength
 			// beautify
 			res.Beautify = BeautifyResponse(res)
+			res.BeautifyHeader = BeautifyHeaders(res)
 			return errors.New("auto redirect is disabled")
 		}))
 
@@ -184,10 +183,10 @@ func BeautifyRequest(req Request) string {
 }
 
 func BeautifyHeaders(res Response) string {
-	beautifyHeader := fmt.Sprintf("%v \n", res.Status)
+	beautifyHeader := fmt.Sprintf("< %v \n", res.Status)
 	for _, header := range res.Headers {
 		for key, value := range header {
-			beautifyHeader += fmt.Sprintf("%v: %v\n", key, value)
+			beautifyHeader += fmt.Sprintf("< %v: %v\n", key, value)
 		}
 	}
 	return beautifyHeader
