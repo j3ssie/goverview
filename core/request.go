@@ -1,11 +1,14 @@
 package core
 
 import (
+	"bufio"
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -69,6 +72,9 @@ func JustSend(options Options, url string) (res Response, err error) {
 			// format the headers
 			var resHeaders []map[string]string
 			for k, v := range resp.Header {
+				if k == "Content-Type" {
+					res.ContentType = strings.Join(v[:], "")
+				}
 				element := make(map[string]string)
 				element[k] = strings.Join(v[:], "")
 				resLength += len(fmt.Sprintf("%s: %s\n", k, strings.Join(v[:], "")))
@@ -138,6 +144,9 @@ func ParseResponse(resp resty.Response) (res Response) {
 	// format the headers
 	var resHeaders []map[string]string
 	for k, v := range resp.RawResponse.Header {
+		if k == "Content-Type" {
+			res.ContentType = strings.Join(v[:], "")
+		}
 		element := make(map[string]string)
 		element[k] = strings.Join(v[:], "")
 		resLength += len(fmt.Sprintf("%s: %s\n", k, strings.Join(v[:], "")))
@@ -205,4 +214,41 @@ func BeautifyResponse(res Response) string {
 
 	beautifyRes += fmt.Sprintf("\n%v\n", res.Body)
 	return beautifyRes
+}
+
+// ParseBurpRequest parse burp style request
+func ParseBurpRequest(raw string) string {
+	rawDecoded, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		return ""
+	}
+
+	var realReq Request
+	reader := bufio.NewReader(strings.NewReader(string(rawDecoded)))
+	parsedReq, err := http.ReadRequest(reader)
+	if err != nil {
+		return ""
+	}
+	realReq.Method = parsedReq.Method
+	// URL part
+	if parsedReq.URL.Host == "" {
+		realReq.Host = parsedReq.Host
+		parsedReq.URL.Host = parsedReq.Host
+	}
+	if parsedReq.URL.Scheme == "" {
+		if parsedReq.Referer() == "" {
+			realReq.Scheme = "https"
+			parsedReq.URL.Scheme = "https"
+		} else {
+			u, err := url.Parse(parsedReq.Referer())
+			if err == nil {
+				realReq.Scheme = u.Scheme
+				parsedReq.URL.Scheme = u.Scheme
+			}
+		}
+	}
+	realReq.URL = parsedReq.URL.String()
+	realReq.Path = parsedReq.RequestURI
+
+	return realReq.URL
 }

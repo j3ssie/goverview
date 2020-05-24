@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/j3ssie/metabigor/core"
+	"github.com/j3ssie/osmedeus/utils"
 	"net/url"
 	"regexp"
 	"sort"
@@ -32,10 +33,18 @@ func CleanWords(filename string) {
 }
 
 // BuildWordlists based on HTML content
-func BuildWordlists(options Options, doc *goquery.Document) {
+func BuildWordlists(options Options, link string, doc *goquery.Document) {
+	if options.SkipWords {
+		utils.DebugF("Skip build wordlists")
+		return
+	}
 	var result []string
+
+	links := []string{link}
+	links = append(links, GetLinks(doc)...)
+	result = append(result, ParseLinks(links)...)
+
 	result = append(result, ParseID(doc)...)
-	result = append(result, ParseLinks(doc)...)
 	result = append(result, ParseInput(doc)...)
 	if len(result) <= 0 {
 		return
@@ -56,9 +65,9 @@ func ParseInput(doc *goquery.Document) []string {
 	return result
 }
 
-// ParseLinks get words from link urls
-func ParseLinks(doc *goquery.Document) []string {
-	var result, links []string
+// GetLinks get links
+func GetLinks(doc *goquery.Document) []string {
+	var links []string
 	doc.Find("*").Each(func(i int, s *goquery.Selection) {
 		tag := goquery.NodeName(s)
 		//result = append(result, tag)
@@ -75,26 +84,44 @@ func ParseLinks(doc *goquery.Document) []string {
 				links = append(links, src)
 			}
 		}
-	})
 
-	// parse all links found
-	for _, link := range links {
-		u, err := url.Parse(link)
-		if err == nil {
-			link = u.Path
-			for k := range u.Query() {
-				result = append(result, k)
+		if tag == "form" {
+			src, _ := s.Attr("action")
+			if src != "" {
+				links = append(links, src)
 			}
 		}
+	})
+	return links
+}
 
-		if strings.Contains(link, "/") {
-			items := strings.Split(link, "/")
-			for _, item := range items {
-				result = append(result, strings.TrimSpace(item))
-			}
+// ParseLink parse link to a words
+func ParseLink(link string) []string {
+	var result []string
+	u, err := url.Parse(link)
+	if err == nil {
+		link = u.Path
+		for k := range u.Query() {
+			result = append(result, k)
 		}
 	}
 
+	if strings.Contains(link, "/") {
+		items := strings.Split(link, "/")
+		for _, item := range items {
+			result = append(result, strings.TrimSpace(item))
+		}
+	}
+	return result
+}
+
+// ParseLinks get words from link urls
+func ParseLinks(links []string) []string {
+	var result []string
+	// parse all links found
+	for _, link := range links {
+		result = append(result, ParseLink(link)...)
+	}
 	return result
 }
 

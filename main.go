@@ -30,9 +30,12 @@ func main() {
 	commands.Flags().StringVarP(&options.ContentFile, "content", "C", "", "Summary File for Content (default 'out/screenshot-summary.txt')")
 	commands.Flags().StringVarP(&options.WordList, "wordlist", "W", "", "Wordlists File build from HTTP Content (default 'out/wordlists.txt')")
 	// mics options
+	commands.Flags().BoolVar(&options.SortTag, "sortTag", false, "Sort HTML tag before do checksum")
+	commands.Flags().BoolVar(&options.SkipWords, "skip-words",  false, "Skip wordlist builder")
 	commands.Flags().BoolVarP(&options.SkipScreen, "skip-screen", "Q", false, "Skip screenshot")
 	commands.Flags().BoolVar(&options.SkipProbe, "skip-probe", false, "Skip probing for checksum")
 	commands.Flags().BoolVarP(&options.SaveReponse, "save-response", "M", false, "Save HTTP response")
+	commands.Flags().BoolVarP(&options.InputAsBurp, "burp", "B", false, "Receive input as base64 burp request")
 	// screen options
 	commands.Flags().BoolVar(&options.AbsPath, "a", false, "Use Absolute path in summary")
 	commands.Flags().BoolVarP(&options.Redirect, "redirect", "R", false, "Allow redirect")
@@ -50,7 +53,7 @@ func main() {
 	}
 }
 
-func run(cmd *cobra.Command, args []string) {
+func run(cmd *cobra.Command, _ []string) {
 	core.InitLog(&options)
 	version, _ := cmd.Flags().GetBool("version")
 	if version {
@@ -72,9 +75,17 @@ func run(cmd *cobra.Command, args []string) {
 			go func() {
 				defer wg.Done()
 				for job := range jobs {
+					// parsing Burp base64 to a URL
+					if options.InputAsBurp {
+						job = core.ParseBurpRequest(job)
+					}
+					if job == "" {
+						continue
+					}
 					core.InforF("[probing] %v", job)
 					checksum := core.CalcCheckSum(options, job)
 					if checksum != "" {
+						core.InforF("[checksum] %v - %v", job, checksum)
 						core.AppendTo(options.ContentFile, checksum)
 					}
 
@@ -168,7 +179,7 @@ func HelpMessage(_ *cobra.Command, _ []string) {
 	h += "\n\nUsage:\n"
 	h += "cat <input_file> | goverview [options]\n\n"
 	h += `Flags:
-  -c, --concurrency int     Set the concurrency level (default 30)
+  -c, --concurrency int     Set th/e concurrency level (default 30)
   -t, --threads int         Set the threads level for do screenshot (default 10)
   -l, --level int           Set level to calculate CheckSum
   -o, --output string       Output Directory (default "out")
@@ -180,6 +191,7 @@ func HelpMessage(_ *cobra.Command, _ []string) {
   -M, --save-response       Save HTTP response
       --a                   Use Absolute path in summary
   -R, --redirect            Allow redirect
+  -B, --burp	            Receive input as base64 burp request
       --timeout int         screenshot timeout (default 10)
       --retry int           Number of retry
       --height int          Height screenshot

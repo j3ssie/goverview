@@ -15,9 +15,12 @@ type Options struct {
 	Retry          int
 	Level          int
 	Redirect       bool
+	SkipWords      bool
 	SkipScreen     bool
 	SkipProbe      bool
 	SaveReponse    bool
+	InputAsBurp    bool
+	SortTag        bool
 	Verbose        bool
 	Debug          bool
 	AbsPath        bool
@@ -48,6 +51,7 @@ type Response struct {
 	HasPopUp       bool
 	StatusCode     int
 	Status         string
+	ContentType    string
 	Headers        []map[string]string
 	Body           string
 	ResponseTime   float64
