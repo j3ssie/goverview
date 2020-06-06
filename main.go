@@ -31,7 +31,7 @@ func main() {
 	commands.Flags().StringVarP(&options.WordList, "wordlist", "W", "", "Wordlists File build from HTTP Content (default 'out/wordlists.txt')")
 	// mics options
 	commands.Flags().BoolVar(&options.SortTag, "sortTag", false, "Sort HTML tag before do checksum")
-	commands.Flags().BoolVar(&options.SkipWords, "skip-words",  false, "Skip wordlist builder")
+	commands.Flags().BoolVar(&options.SkipWords, "skip-words", false, "Skip wordlist builder")
 	commands.Flags().BoolVarP(&options.SkipScreen, "skip-screen", "Q", false, "Skip screenshot")
 	commands.Flags().BoolVar(&options.SkipProbe, "skip-probe", false, "Skip probing for checksum")
 	commands.Flags().BoolVarP(&options.SaveReponse, "save-response", "M", false, "Save HTTP response")

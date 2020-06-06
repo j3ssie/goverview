@@ -2,8 +2,6 @@ package core
 
 import (
 	"github.com/PuerkitoBio/goquery"
-	"github.com/j3ssie/metabigor/core"
-	"github.com/j3ssie/osmedeus/utils"
 	"net/url"
 	"regexp"
 	"sort"
@@ -13,7 +11,7 @@ import (
 // CleanWords clean wordlists
 func CleanWords(filename string) {
 	var cleaned []string
-	words := core.ReadingFileUnique(filename)
+	words := ReadingFileUnique(filename)
 	if len(words) <= 0 {
 		return
 	}
@@ -29,13 +27,13 @@ func CleanWords(filename string) {
 		cleaned = append(cleaned, word)
 	}
 	sort.Sort(sort.StringSlice(cleaned))
-	core.WriteToFile(filename, strings.Join(cleaned, "\n"))
+	WriteToFile(filename, strings.Join(cleaned, "\n"))
 }
 
 // BuildWordlists based on HTML content
 func BuildWordlists(options Options, link string, doc *goquery.Document) {
 	if options.SkipWords {
-		utils.DebugF("Skip build wordlists")
+		DebugF("Skip build wordlists")
 		return
 	}
 	var result []string
