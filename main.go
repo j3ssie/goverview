@@ -39,7 +39,7 @@ func main() {
 	// screen options
 	commands.Flags().BoolVar(&options.AbsPath, "a", false, "Use Absolute path in summary")
 	commands.Flags().BoolVarP(&options.Redirect, "redirect", "R", false, "Allow redirect")
-	commands.Flags().IntVar(&options.Timeout, "timeout", 15, "screenshot timeout")
+	commands.Flags().IntVar(&options.Timeout, "timeout", 40, "screenshot timeout")
 	commands.Flags().IntVar(&options.Retry, "retry", 2, "Number of retry")
 	commands.Flags().IntVar(&options.ImgHeight, "height", 0, "Height screenshot")
 	commands.Flags().IntVar(&options.ImgWidth, "width", 0, "Width screenshot")

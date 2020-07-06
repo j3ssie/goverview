@@ -2,12 +2,14 @@ package core
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	"path"
 	"sort"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
+// CalcCheckSum calculate checksum
 func CalcCheckSum(options Options, url string) string {
 	var result string
 	title := "No-Title"
@@ -82,7 +84,7 @@ func CalcCheckSum(options Options, url string) string {
 func GetTitle(doc *goquery.Document) string {
 	var title string
 	doc.Find("title").Each(func(i int, s *goquery.Selection) {
-		title = s.Text()
+		title = strings.TrimSpace(s.Text())
 	})
 	if title == "" {
 		title = "Blank Title"
