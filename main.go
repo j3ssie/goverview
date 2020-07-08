@@ -210,7 +210,7 @@ func HelpMessage(cmd *cobra.Command, _ []string) {
 
 	h += "\n\nExamples:\n"
 	h += "  # Only get summary \n"
-	h += "  cat list_of_urls.txt | goverview -N -Q -c 50| tee only-overview.txt \n\n"
+	h += "  cat list_of_urls.txt | goverview -N -Q -c 50 | tee only-overview.txt \n\n"
 	h += "  # Get summary content and store raw response without screenshot \n"
 	h += "  cat list_of_urls.txt | goverview -v -Q -M -l 2\n\n"
 	h += "  # Only do screenshot \n"
