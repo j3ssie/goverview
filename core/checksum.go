@@ -2,25 +2,71 @@ package core
 
 import (
 	"fmt"
+	"github.com/go-resty/resty"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	jsoniter "github.com/json-iterator/go"
 )
 
+// Overview Dehashed code
+type Overview struct {
+	URL           string `json:"url"`
+	Title         string `json:"title"`
+	CheckSum      string `json:"checksum"`
+	ContentFile   string `json:"content_file"`
+	Status        string `json:"status_code"`
+	ContentLength string `json:"length"`
+	Redirect      string `json:"redirect"`
+}
+
+// PrintOverview
+func PrintOverview(options Options, overview Overview) string {
+	if options.JsonOutput {
+		if data, err := jsoniter.MarshalToString(overview); err == nil {
+			return data
+		}
+	}
+	// more detail when no output file
+	if options.NoOutput {
+		return fmt.Sprintf("%v ;; %v ;; %v ;; %v ;; %v ;; %v", overview.URL, overview.Title, overview.CheckSum, overview.Status, overview.ContentLength, overview.Redirect)
+	}
+
+	if options.SaveRedirectURL {
+		return fmt.Sprintf("%v ;; %v ;; %v ;; %v ;; %v", overview.URL, overview.Title, overview.CheckSum, overview.ContentFile, overview.Redirect)
+	}
+	return fmt.Sprintf("%v ;; %v ;; %v ;; %v", overview.URL, overview.Title, overview.CheckSum, overview.ContentFile)
+}
+
 // CalcCheckSum calculate checksum
-func CalcCheckSum(options Options, url string) string {
+func CalcCheckSum(options Options, url string, client *resty.Client) string {
 	var result string
 	title := "No-Title"
 	hash := "No-CheckSum"
 	contentFile := "No-Content"
-	res, err := JustSend(options, url)
-	DebugF("Headers: \n%v", res.BeautifyHeader)
-	DebugF("Body: \n%v", res.Beautify)
-	if err != nil && res.StatusCode == 0 {
+	overview := Overview{
+		URL:         url,
+		Title:       title,
+		CheckSum:    "",
+		ContentFile: "",
+		Redirect:    "No-Redirect",
+	}
+	res, err := JustSend(options, url, client)
+	if err != nil {
+		DebugF("Headers: \n%v", res.BeautifyHeader)
+		DebugF("Body: \n%v", res.Beautify)
 		ErrorF("Error sending: %v", url)
-		return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, hash, contentFile)
+		//return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, hash, contentFile)
+		return ""
+	}
+
+	overview.Status = res.Status
+	overview.ContentLength = fmt.Sprintf("%v", res.Length)
+	if res.Location != "" {
+		overview.Redirect = res.Location
 	}
 
 	// store response
@@ -28,7 +74,7 @@ func CalcCheckSum(options Options, url string) string {
 	if options.SaveReponse {
 		content += "\n\n" + res.Body
 	}
-	if strings.TrimSpace(content) != "" {
+	if !options.NoOutput && strings.TrimSpace(content) != "" {
 		contentFile = fmt.Sprintf("%v.txt", strings.Replace(url, "://", "___", -1))
 		contentFile = strings.Replace(contentFile, "?", "_", -1)
 		contentFile = strings.Replace(contentFile, "/", "_", -1)
@@ -47,7 +93,11 @@ func CalcCheckSum(options Options, url string) string {
 	if !strings.Contains(res.ContentType, "html") && !strings.Contains(res.ContentType, "xml") {
 		if !strings.Contains(res.Body, "<html>") && !strings.Contains(res.Body, "<a>") {
 			hash = GenHash(fmt.Sprintf("%v-%v", title, result))
-			return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, GenHash(res.Body), contentFile)
+			//return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, GenHash(res.Body), contentFile)
+			overview.CheckSum = GenHash(res.Body)
+			overview.Title = title
+			overview.ContentFile = contentFile
+			PrintOverview(options, overview)
 		}
 	}
 
@@ -77,7 +127,11 @@ func CalcCheckSum(options Options, url string) string {
 	}
 
 	DebugF("Checksum-lv-%v: %v \n", options.Level, result)
-	return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, hash, contentFile)
+	overview.CheckSum = hash
+	overview.Title = title
+	overview.ContentFile = contentFile
+	return PrintOverview(options, overview)
+	//return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, hash, contentFile)
 }
 
 // GetTitle get title of response
@@ -89,6 +143,12 @@ func GetTitle(doc *goquery.Document) string {
 	if title == "" {
 		title = "Blank Title"
 	}
+
+	// clean title if if have new line here
+	if strings.Contains(title, "\n") {
+		title = regexp.MustCompile(`[\t\r\n]+`).ReplaceAllString(strings.TrimSpace(title), "\n")
+	}
+
 	return title
 }
 

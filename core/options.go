@@ -2,31 +2,36 @@ package core
 
 // Options global options
 type Options struct {
-	Output         string
-	ScreenOutput   string
-	ContentOutput  string
-	ScreenShotFile string
-	CheckSumFile   string
-	ContentFile    string
-	WordList       string
-	LogFile        string
-	Concurrency    int
-	Threads        int
-	Retry          int
-	Level          int
-	Redirect       bool
-	SkipWords      bool
-	SkipScreen     bool
-	SkipProbe      bool
-	SaveReponse    bool
-	InputAsBurp    bool
-	SortTag        bool
-	Verbose        bool
-	Debug          bool
-	AbsPath        bool
-	Timeout        int
-	ImgWidth       int
-	ImgHeight      int
+	Output          string
+	ScreenOutput    string
+	ContentOutput   string
+	ScreenShotFile  string
+	CheckSumFile    string
+	ContentFile     string
+	WordList        string
+	LogFile         string
+	Concurrency     int
+	Threads         int
+	Headers         []string
+	Timeout         int
+	Retry           int
+	Level           int
+	NoOutput        bool
+	Redirect        bool
+	SkipWords       bool
+	SkipScreen      bool
+	SkipProbe       bool
+	SaveReponse     bool
+	SaveRedirectURL bool
+	InputAsBurp     bool
+	SortTag         bool
+	JsonOutput      bool
+	Verbose         bool
+	Debug           bool
+	AbsPath         bool
+	ScreenTimeout   int
+	ImgWidth        int
+	ImgHeight       int
 }
 
 // Request all information about request
@@ -57,5 +62,6 @@ type Response struct {
 	ResponseTime   float64
 	Length         int
 	Beautify       string
+	Location       string
 	BeautifyHeader string
 }

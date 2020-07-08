@@ -17,15 +17,25 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// JustSend just sending request
-func JustSend(options Options, url string) (res Response, err error) {
-	method := "GET"
+// BuildClient build base HTTP client
+func BuildClient(options Options) *resty.Client {
 	headers := map[string]string{
 		"UserAgent":  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
 		"Accept":     "*/*",
 		"AcceptLang": "en-US,en;q=0.8",
 	}
 	timeout := options.Timeout
+	if len(options.Headers) > 0 {
+		for _, head := range options.Headers {
+			if strings.Contains(head, ":") {
+				data := strings.Split(head, ":")
+				if len(data) < 2 {
+					continue
+				}
+				headers[data[0]] = strings.Join(data[1:], "")
+			}
+		}
+	}
 
 	// disable log when retry
 	logger := logrus.New()
@@ -54,8 +64,13 @@ func JustSend(options Options, url string) (res Response, err error) {
 	client.SetTimeout(time.Duration(timeout) * time.Second)
 	client.SetRetryWaitTime(time.Duration(timeout/2) * time.Second)
 	client.SetRetryMaxWaitTime(time.Duration(timeout) * time.Second)
-	timeStart := time.Now()
+	return client
+}
 
+// JustSend just sending request
+func JustSend(options Options, url string, client *resty.Client) (res Response, err error) {
+	method := "GET"
+	timeStart := time.Now()
 	// redirect policy
 	if options.Redirect == false {
 		client.SetRedirectPolicy(resty.RedirectPolicyFunc(func(req *http.Request, via []*http.Request) error {
@@ -74,6 +89,9 @@ func JustSend(options Options, url string) (res Response, err error) {
 			for k, v := range resp.Header {
 				if k == "Content-Type" {
 					res.ContentType = strings.Join(v[:], "")
+				}
+				if k == "Location" {
+					res.Location = strings.Join(v[:], "")
 				}
 				element := make(map[string]string)
 				element[k] = strings.Join(v[:], "")
@@ -109,7 +127,6 @@ func JustSend(options Options, url string) (res Response, err error) {
 	} else {
 		client.SetRedirectPolicy(resty.RedirectPolicyFunc(func(req *http.Request, via []*http.Request) error {
 			// keep the header the same
-			client.SetHeaders(headers)
 			return nil
 		}))
 	}
@@ -146,6 +163,9 @@ func ParseResponse(resp resty.Response) (res Response) {
 	for k, v := range resp.RawResponse.Header {
 		if k == "Content-Type" {
 			res.ContentType = strings.Join(v[:], "")
+		}
+		if k == "Location" {
+			res.Location = strings.Join(v[:], "")
 		}
 		element := make(map[string]string)
 		element[k] = strings.Join(v[:], "")

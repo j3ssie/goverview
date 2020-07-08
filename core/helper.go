@@ -118,11 +118,11 @@ func AppendTo(filename string, data string) (string, error) {
 
 // FileExists check if file is exist or not
 func FileExists(filename string) bool {
-	info, err := os.Stat(filename)
+	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
 	}
-	return !info.IsDir()
+	return true
 }
 
 // FolderExists check if file is exist or not
