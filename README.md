@@ -55,7 +55,7 @@ Checksum Content Level:
 
 Examples:
   # Only get summary
-  cat list_of_urls.txt | goverview -N -Q -c 50| tee only-overview.txt
+  cat list_of_urls.txt | goverview -N -Q -c 50 | tee only-overview.txt
 
   # Get summary content and store raw response without screenshot
   cat list_of_urls.txt | goverview -v -Q -M -l 2
