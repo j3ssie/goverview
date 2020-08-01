@@ -18,7 +18,8 @@ type Overview struct {
 	Title         string `json:"title"`
 	CheckSum      string `json:"checksum"`
 	ContentFile   string `json:"content_file"`
-	Status        string `json:"status_code"`
+	Status        string `json:"status"`
+	ResponseTime  string `json:"time"`
 	ContentLength string `json:"length"`
 	Redirect      string `json:"redirect"`
 }
@@ -63,8 +64,10 @@ func CalcCheckSum(options Options, url string, client *resty.Client) string {
 		return ""
 	}
 
-	overview.Status = res.Status
+	overview.Status = fmt.Sprintf("%d", res.StatusCode)
+	overview.ResponseTime = fmt.Sprintf("%v", res.ResponseTime)
 	overview.ContentLength = fmt.Sprintf("%v", res.Length)
+
 	if res.Location != "" {
 		overview.Redirect = res.Location
 	}
