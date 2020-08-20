@@ -11,40 +11,41 @@ go get -u github.com/j3ssie/goverview
 ## Example Commands
 
 ```
-goverview - Overview about list of URLs - beta v0.1.4 by @j3ssiejjj
+goverview - Overview about list of URLs - beta v0.2.0 by @j3ssiejjj
 
 Usage:
-  goverview [flags]
+  goverview [command]
+
+Available Commands:
+  help        Help about any command
+  probe       Do Probing on target
+  screen      Do Screenshot on target
 
 Flags:
-  -c, --concurrency int      Set the concurrency level (default 20)
-  -t, --threads int          Set the threads level for do screenshot (default 10)
-  -l, --level int            Set level to calculate CheckSum
-  -j, --json                 Output as JSON
-  -N, --no-output            No output
-  -o, --output string        Output Directory (default "out")
-  -S, --screenshot string    Summary File for Screenshot (default 'out/screenshot-summary.txt')
-  -C, --content string       Summary File for Content (default 'out/content-summary.txt')
-  -W, --wordlist string      Wordlists File build from HTTP Content (default 'out/wordlists.txt')
-  -B, --burp                 Receive input as base64 burp request
-      --sortTag              Sort HTML tag before do checksum
-      --skip-words           Skip wordlist builder
-  -Q, --skip-screen          Skip screenshot
-      --skip-probe           Skip probing for checksum
-  -M, --save-response        Save HTTP response
-  -L, --redirect             Allow redirect
-  -R, --save-redirect        Save redirect URL to overview file too
-      --timeout int          HTTP timeout (default 15)
-      --retry int            Number of retry
-  -H, --headers strings      Custom headers (e.g: -H 'Referer: {{.BaseURL}}') (Multiple -H flags are accepted)
-      --a                    Use Absolute path in summary
-      --screen-timeout int   screenshot timeout (default 40)
-      --height int           Height screenshot
-      --width int            Width screenshot
-  -v, --verbose              Verbose output
-      --debug                Debug output
-  -V, --version              Print version
-  -h, --help                 help for goverview
+  -B, --burp                Receive input as base64 burp request
+  -c, --concurrency int     Set the concurrency level (default 10)
+  -C, --content string      Summary File for Content (default 'out/content-summary.txt')
+      --debug               Debug output
+  -H, --headers strings     Custom headers (e.g: -H 'Referer: {{.BaseURL}}') (Multiple -H flags are accepted)
+  -h, --help                help for goverview
+  -I, --inputFile string    Custom headers (e.g: -H 'Referer: {{.BaseURL}}') (Multiple -H flags are accepted)
+  -i, --inputs strings      Custom headers (e.g: -H 'Referer: {{.BaseURL}}') (Multiple -H flags are accepted)
+  -j, --json                Output as JSON
+  -l, --level int           Set level to calculate CheckSum
+  -N, --no-output           No output
+  -o, --output string       Output Directory (default "out")
+  -L, --redirect            Allow redirect
+      --retry int           Number of retry
+  -R, --save-redirect       Save redirect URL to overview file too
+  -S, --screenshot string   Summary File for Screenshot (default 'out/screenshot-summary.txt')
+      --sortTag             Sort HTML tag before do checksum
+  -t, --threads int         Set the threads level for do screenshot (default 5)
+      --timeout int         HTTP timeout (default 15)
+  -v, --verbose             Verbose output
+  -V, --version             Print version
+  -W, --wordlist string     Wordlists File build from HTTP Content (default 'out/wordlists.txt')
+
+Use "goverview [command] --help" for more information about a command.
 
 
 Checksum Content Level:
@@ -55,16 +56,19 @@ Checksum Content Level:
 
 Examples:
   # Only get summary
-  cat list_of_urls.txt | goverview -N -Q -c 50 | tee only-overview.txt
+  cat http_lists.txt | goverview probe -N -c 50 | tee only-overview.txt
 
   # Get summary content and store raw response without screenshot
-  cat list_of_urls.txt | goverview -v -Q -M -l 2
+  cat http_lists.txt | goverview probe -c 20 -M --json
 
   # Only do screenshot
   cat list_of_urls.txt | goverview --skip-probe
 
-  # Do full probing and screnshot
-  cat list_of_urls.txt | goverview
+  # Do screnshot
+  cat http_lists.txt | goverview screen -c 5 --json
+
+  # Do screnshot based on success HTTP site
+  cat overview/target.com-http-overview.txt | jq -r '. | select(.status=="200") | .url' | goverview screen -c 5 -o overview -S overview/target.com-screen.txt
 ```
 
 ## License
