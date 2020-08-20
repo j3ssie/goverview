@@ -115,5 +115,7 @@ func HelpMessage(cmd *cobra.Command, _ []string) {
 	h += "  cat list_of_urls.txt | goverview --skip-probe \n\n"
 	h += "  # Do screnshot \n"
 	h += "  cat http_lists.txt | goverview screen -c 5 --json\n\n"
+	h += "  # Do screnshot based on success HTTP site \n"
+	h += "  cat overview/target.com-http-overview.txt | jq -r '. | select(.status==\"200\") | .url' | goverview screen -c 5 -o overview -S overview/target.com-screen.txt\n\n"
 	fmt.Printf(h)
 }
