@@ -3,10 +3,12 @@ package core
 import (
 	"fmt"
 	"testing"
+
+	"github.com/j3ssie/goverview/libs"
 )
 
 func TestCalcCheckSum(t *testing.T) {
-	var options Options
+	var options libs.Options
 	options.Level = 5
 	url := "http://httpbin.org/anything?q=123&id=11"
 	result := CalcCheckSum(options, url)
@@ -18,7 +20,7 @@ func TestCalcCheckSum(t *testing.T) {
 }
 
 func TestCalcCheckSum0(t *testing.T) {
-	var options Options
+	var options libs.Options
 	// level 0
 	options.Level = 0
 	url := "https://www.wappalyzer.com"
@@ -30,7 +32,7 @@ func TestCalcCheckSum0(t *testing.T) {
 }
 
 func TestCalcCheckSum1(t *testing.T) {
-	var options Options
+	var options libs.Options
 	// level 0
 	options.Level = 1
 	url := "https://www.wappalyzer.com"

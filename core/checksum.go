@@ -3,6 +3,8 @@ package core
 import (
 	"fmt"
 	"github.com/go-resty/resty"
+	"github.com/j3ssie/goverview/libs"
+	"github.com/j3ssie/goverview/utils"
 	"path"
 	"regexp"
 	"sort"
@@ -12,7 +14,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// Overview Dehashed code
+// Overview overview struct
 type Overview struct {
 	URL           string `json:"url"`
 	Title         string `json:"title"`
@@ -24,15 +26,15 @@ type Overview struct {
 	Redirect      string `json:"redirect"`
 }
 
-// PrintOverview
-func PrintOverview(options Options, overview Overview) string {
+// PrintOverview print probe string
+func PrintOverview(options libs.Options, overview Overview) string {
 	if options.JsonOutput {
 		if data, err := jsoniter.MarshalToString(overview); err == nil {
 			return data
 		}
 	}
 	// more detail when no output file
-	if options.NoOutput {
+	if options.NoOutput || options.Probe.OnlySummary {
 		return fmt.Sprintf("%v ;; %v ;; %v ;; %v ;; %v ;; %v", overview.URL, overview.Title, overview.CheckSum, overview.Status, overview.ContentLength, overview.Redirect)
 	}
 
@@ -43,7 +45,7 @@ func PrintOverview(options Options, overview Overview) string {
 }
 
 // CalcCheckSum calculate checksum
-func CalcCheckSum(options Options, url string, client *resty.Client) string {
+func CalcCheckSum(options libs.Options, url string, client *resty.Client) string {
 	var result string
 	title := "No-Title"
 	hash := "No-CheckSum"
@@ -57,9 +59,9 @@ func CalcCheckSum(options Options, url string, client *resty.Client) string {
 	}
 	res, err := JustSend(options, url, client)
 	if err != nil {
-		DebugF("Headers: \n%v", res.BeautifyHeader)
-		DebugF("Body: \n%v", res.Beautify)
-		ErrorF("Error sending: %v", url)
+		utils.DebugF("Headers: \n%v", res.BeautifyHeader)
+		utils.DebugF("Body: \n%v", res.Beautify)
+		utils.ErrorF("Error sending: %v", url)
 		//return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, hash, contentFile)
 		return ""
 	}
@@ -77,16 +79,17 @@ func CalcCheckSum(options Options, url string, client *resty.Client) string {
 	if options.SaveReponse {
 		content += "\n\n" + res.Body
 	}
-	if !options.NoOutput && strings.TrimSpace(content) != "" {
+	if !(options.NoOutput || options.Probe.OnlySummary) && strings.TrimSpace(content) != "" {
 		contentFile = fmt.Sprintf("%v.txt", strings.Replace(url, "://", "___", -1))
 		contentFile = strings.Replace(contentFile, "?", "_", -1)
 		contentFile = strings.Replace(contentFile, "/", "_", -1)
 		content = fmt.Sprintf("> GET %v\n%v", url, content)
 		contentFile = path.Join(options.ContentOutput, contentFile)
-		DebugF("contentFile: %v", contentFile)
+		utils.DebugF("contentFile: %v", contentFile)
 		_, err = WriteToFile(contentFile, content)
+
 		if err != nil {
-			ErrorF("WriteToFile: ", err)
+			utils.ErrorF("WriteToFile: ", err)
 			contentFile = "No-Content"
 		}
 	}
@@ -107,14 +110,16 @@ func CalcCheckSum(options Options, url string, client *resty.Client) string {
 	// parse body
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(res.Body))
 	if err != nil {
-		ErrorF("Error Parsing Body: %v", url)
+		utils.ErrorF("Error Parsing Body: %v", url)
 		return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, GenHash(res.Body), contentFile)
 	}
 	title = GetTitle(doc)
 	hash = GenHash(fmt.Sprintf("%v-%v", title, result))
 
 	// wordlist builder
-	BuildWordlists(options, url, doc)
+	if options.Probe.WordsSummary {
+		BuildWordlists(options, url, doc)
+	}
 
 	// calculate Hash based on level
 	switch options.Level {
@@ -129,7 +134,7 @@ func CalcCheckSum(options Options, url string, client *resty.Client) string {
 		hash = GenHash(fmt.Sprintf("%v-%v", title, result))
 	}
 
-	DebugF("Checksum-lv-%v: %v \n", options.Level, result)
+	utils.DebugF("Checksum-lv-%v: %v \n", options.Level, result)
 	overview.CheckSum = hash
 	overview.Title = title
 	overview.ContentFile = contentFile
@@ -156,7 +161,7 @@ func GetTitle(doc *goquery.Document) string {
 }
 
 // ParseDocLevel0 calculate Hash based on src in scripts
-func ParseDocLevel0(options Options, doc *goquery.Document) string {
+func ParseDocLevel0(options libs.Options, doc *goquery.Document) string {
 	var result []string
 	doc.Find("script").Each(func(i int, s *goquery.Selection) {
 		src, _ := s.Attr("src")
@@ -172,7 +177,7 @@ func ParseDocLevel0(options Options, doc *goquery.Document) string {
 }
 
 // ParseDocLevel1 calculate Hash based on src in scripts
-func ParseDocLevel1(options Options, doc *goquery.Document) string {
+func ParseDocLevel1(options libs.Options, doc *goquery.Document) string {
 	var result []string
 	doc.Find("*").Each(func(i int, s *goquery.Selection) {
 		tag := goquery.NodeName(s)
@@ -192,7 +197,7 @@ func ParseDocLevel1(options Options, doc *goquery.Document) string {
 }
 
 // ParseDocLevel2 calculate Hash based on src in scripts
-func ParseDocLevel2(options Options, doc *goquery.Document) string {
+func ParseDocLevel2(options libs.Options, doc *goquery.Document) string {
 	var result []string
 	doc.Find("*").Each(func(i int, s *goquery.Selection) {
 		tag := goquery.NodeName(s)

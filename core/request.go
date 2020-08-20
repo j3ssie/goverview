@@ -14,11 +14,13 @@ import (
 	"time"
 
 	"github.com/go-resty/resty"
+	"github.com/j3ssie/goverview/libs"
+	"github.com/j3ssie/goverview/utils"
 	"github.com/sirupsen/logrus"
 )
 
 // BuildClient build base HTTP client
-func BuildClient(options Options) *resty.Client {
+func BuildClient(options libs.Options) *resty.Client {
 	headers := map[string]string{
 		"UserAgent":  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
 		"Accept":     "*/*",
@@ -68,7 +70,7 @@ func BuildClient(options Options) *resty.Client {
 }
 
 // JustSend just sending request
-func JustSend(options Options, url string, client *resty.Client) (res Response, err error) {
+func JustSend(options libs.Options, url string, client *resty.Client) (res libs.Response, err error) {
 	method := "GET"
 	timeStart := time.Now()
 	// redirect policy
@@ -80,7 +82,7 @@ func JustSend(options Options, url string, client *resty.Client) (res Response, 
 			resp := req.Response
 			bodyBytes, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				ErrorF("%v", err)
+				utils.ErrorF("%v", err)
 			}
 			bodyString := string(bodyBytes)
 			resLength := len(bodyString)
@@ -147,15 +149,15 @@ func JustSend(options Options, url string, client *resty.Client) (res Response, 
 	}
 
 	if err != nil || resp == nil {
-		ErrorF("%v %v", url, err)
-		return Response{}, err
+		utils.ErrorF("%v %v", url, err)
+		return libs.Response{}, err
 	}
 
 	return ParseResponse(*resp), nil
 }
 
 // ParseResponse field to Response
-func ParseResponse(resp resty.Response) (res Response) {
+func ParseResponse(resp resty.Response) (res libs.Response) {
 	// var res libs.Response
 	resLength := len(string(resp.Body()))
 	// format the headers
@@ -193,7 +195,7 @@ func ParseResponse(resp resty.Response) (res Response) {
 }
 
 // BeautifyRequest beautify request
-func BeautifyRequest(req Request) string {
+func BeautifyRequest(req libs.Request) string {
 	var beautifyReq string
 	// hardcoded HTTP/1.1 for now
 	beautifyReq += fmt.Sprintf("%v %v HTTP/1.1\n", req.Method, req.URL)
@@ -211,7 +213,8 @@ func BeautifyRequest(req Request) string {
 	return beautifyReq
 }
 
-func BeautifyHeaders(res Response) string {
+// BeautifyHeaders beautify headers
+func BeautifyHeaders(res libs.Response) string {
 	beautifyHeader := fmt.Sprintf("< %v \n", res.Status)
 	for _, header := range res.Headers {
 		for key, value := range header {
@@ -222,7 +225,7 @@ func BeautifyHeaders(res Response) string {
 }
 
 // BeautifyResponse beautify response
-func BeautifyResponse(res Response) string {
+func BeautifyResponse(res libs.Response) string {
 	var beautifyRes string
 	beautifyRes += fmt.Sprintf("%v \n", res.Status)
 
@@ -243,7 +246,7 @@ func ParseBurpRequest(raw string) string {
 		return ""
 	}
 
-	var realReq Request
+	var realReq libs.Request
 	reader := bufio.NewReader(strings.NewReader(string(rawDecoded)))
 	parsedReq, err := http.ReadRequest(reader)
 	if err != nil {

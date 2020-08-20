@@ -2,6 +2,8 @@ package core
 
 import (
 	"github.com/PuerkitoBio/goquery"
+	"github.com/j3ssie/goverview/libs"
+	"github.com/j3ssie/goverview/utils"
 	"net/url"
 	"regexp"
 	"sort"
@@ -31,9 +33,9 @@ func CleanWords(filename string) {
 }
 
 // BuildWordlists based on HTML content
-func BuildWordlists(options Options, link string, doc *goquery.Document) {
+func BuildWordlists(options libs.Options, link string, doc *goquery.Document) {
 	if options.SkipWords {
-		DebugF("Skip build wordlists")
+		utils.DebugF("Skip build wordlists")
 		return
 	}
 	var result []string

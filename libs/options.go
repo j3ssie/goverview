@@ -1,4 +1,4 @@
-package core
+package libs
 
 // Options global options
 type Options struct {
@@ -10,9 +10,12 @@ type Options struct {
 	ContentFile     string
 	WordList        string
 	LogFile         string
+	TmpDir          string
 	Concurrency     int
 	Threads         int
 	Headers         []string
+	Inputs          []string
+	InputFile       string
 	Timeout         int
 	Retry           int
 	Level           int
@@ -32,36 +35,20 @@ type Options struct {
 	ScreenTimeout   int
 	ImgWidth        int
 	ImgHeight       int
+	Probe           ProbeOpt
+	Screen          ScreenOpt
 }
 
-// Request all information about request
-type Request struct {
-	Timeout  int
-	Repeat   int
-	Scheme   string
-	Host     string
-	Port     string
-	Path     string
-	URL      string
-	Proxy    string
-	Method   string
-	Redirect bool
-	Headers  []map[string]string
-	Body     string
-	Beautify string
+// ProbeOpt options for probing
+type ProbeOpt struct {
+	OnlySummary  bool
+	WordsSummary bool
+	ContentOutput string
 }
 
-// Response all information about response
-type Response struct {
-	HasPopUp       bool
-	StatusCode     int
-	Status         string
-	ContentType    string
-	Headers        []map[string]string
-	Body           string
-	ResponseTime   float64
-	Length         int
-	Beautify       string
-	Location       string
-	BeautifyHeader string
+type ScreenOpt struct {
+	ScreenOutput   string
+	ScreenTimeout int
+	ImgWidth      int
+	ImgHeight     int
 }

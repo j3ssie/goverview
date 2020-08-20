@@ -6,6 +6,9 @@ import (
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
+	"github.com/j3ssie/goverview/libs"
+	"github.com/j3ssie/goverview/utils"
+	jsoniter "github.com/json-iterator/go"
 	"io/ioutil"
 	"log"
 	"math"
@@ -16,9 +19,36 @@ import (
 	"time"
 )
 
-func DoScreenshot(options Options, raw string) string {
+// Screen overview struct
+type Screen struct {
+	URL   string `json:"url"`
+	Image string `json:"image"`
+}
+
+// PrintScreen print probe string
+func PrintScreen(options libs.Options, screen Screen) string {
+	if screen.URL == "" || screen.Image == "" {
+		return ""
+	}
+	if options.AbsPath {
+		screen.Image = path.Base(screen.Image)
+	}
+
+	if options.JsonOutput {
+		if data, err := jsoniter.MarshalToString(screen); err == nil {
+			return data
+		}
+	}
+	return fmt.Sprintf("%v ;; %v", screen.URL, screen.Image)
+
+}
+
+func DoScreenshot(options libs.Options, raw string) string {
 	imageName := strings.Replace(raw, "://", "___", -1)
-	imageScreen := path.Join(options.ScreenOutput, fmt.Sprintf("%v.png", strings.Replace(imageName, "/", "_", -1)))
+	imageScreen := path.Join(options.Screen.ScreenOutput, fmt.Sprintf("%v.png", strings.Replace(imageName, "/", "_", -1)))
+	screen := Screen{
+		URL: raw,
+	}
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.Flag("headless", true),
@@ -35,7 +65,7 @@ func DoScreenshot(options Options, raw string) string {
 	allocCtx, bcancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer bcancel()
 	ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
-	ctx, cancel = context.WithTimeout(ctx, time.Duration(options.ScreenTimeout)*time.Second)
+	ctx, cancel = context.WithTimeout(ctx, time.Duration(options.Screen.ScreenTimeout)*time.Second)
 	defer cancel()
 
 	// capture screenshot of an element
@@ -44,24 +74,24 @@ func DoScreenshot(options Options, raw string) string {
 	// clean chromedp-runner folder
 	cleanUp()
 	if err != nil {
-		ErrorF("screen err: %v", raw)
-		return ""
+		utils.ErrorF("screen err: %v", raw)
+		return PrintScreen(options, screen)
 	}
 
 	// write image
 	if err := ioutil.WriteFile(imageScreen, buf, 0644); err != nil {
-		ErrorF("screen err: %v", raw)
+
+		utils.ErrorF("write screen err: %v", raw)
+		return PrintScreen(options, screen)
 	}
-	if options.AbsPath {
-		return imageScreen
-	}
-	return path.Base(imageScreen)
+	screen.Image = imageScreen
+	return PrintScreen(options, screen)
 }
 
 // fullScreenshot takes a screenshot of the entire browser viewport.
 // Liberally copied from puppeteer's source.
 // Note: this will override the viewport emulation settings.
-func fullScreenshot(options Options, urlstr string, quality int64, res *[]byte) chromedp.Tasks {
+func fullScreenshot(options libs.Options, urlstr string, quality int64, res *[]byte) chromedp.Tasks {
 	return chromedp.Tasks{
 		chromedp.Navigate(urlstr),
 		chromedp.ActionFunc(func(ctx context.Context) error {
@@ -74,9 +104,9 @@ func fullScreenshot(options Options, urlstr string, quality int64, res *[]byte) 
 			width, height := int64(math.Ceil(contentSize.Width)), int64(math.Ceil(contentSize.Height))
 			//imgWidth       int
 			//imgHeight      int
-			if options.ImgWidth != 0 && options.ImgHeight != 0 {
-				width = int64(options.ImgWidth)
-				height = int64(options.ImgHeight)
+			if options.Screen.ImgWidth != 0 && options.Screen.ImgHeight != 0 {
+				width = int64(options.Screen.ImgWidth)
+				height = int64(options.Screen.ImgHeight)
 			}
 
 			// force viewport emulation
