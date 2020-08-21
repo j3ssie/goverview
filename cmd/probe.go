@@ -126,7 +126,7 @@ func prepareOutput() {
 	options.Screen.ScreenOutput = path.Join(options.Output, "screenshots")
 	os.MkdirAll(options.ContentOutput, 0750)
 	if !options.SkipScreen {
-		os.MkdirAll(options.ScreenOutput, 0750)
+		os.MkdirAll(options.Screen.ScreenOutput, 0750)
 	}
 
 	if options.AbsPath {

@@ -74,14 +74,13 @@ func DoScreenshot(options libs.Options, raw string) string {
 	// clean chromedp-runner folder
 	cleanUp()
 	if err != nil {
-		utils.ErrorF("screen err: %v", raw)
+		utils.ErrorF("screen err: %v - ", raw, err)
 		return PrintScreen(options, screen)
 	}
 
 	// write image
 	if err := ioutil.WriteFile(imageScreen, buf, 0644); err != nil {
-
-		utils.ErrorF("write screen err: %v", raw)
+		utils.ErrorF("write screen err: %v - %v", raw, err)
 		return PrintScreen(options, screen)
 	}
 	screen.Image = imageScreen
