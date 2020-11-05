@@ -6,9 +6,14 @@ import (
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
+	rodutils "github.com/go-rod/rod/lib/utils"
 	"github.com/j3ssie/goverview/libs"
 	"github.com/j3ssie/goverview/utils"
 	jsoniter "github.com/json-iterator/go"
+	"net/url"
+
 	"io/ioutil"
 	"log"
 	"math"
@@ -40,7 +45,6 @@ func PrintScreen(options libs.Options, screen Screen) string {
 		}
 	}
 	return fmt.Sprintf("%v ;; %v", screen.URL, screen.Image)
-
 }
 
 func DoScreenshot(options libs.Options, raw string) string {
@@ -54,13 +58,14 @@ func DoScreenshot(options libs.Options, raw string) string {
 		chromedp.Flag("headless", true),
 		chromedp.Flag("ignore-certificate-errors", true),
 		chromedp.Flag("disable-gpu", true),
-		chromedp.Flag("enable-automation", true),
+		chromedp.Flag("enable-automation", false),
 		chromedp.Flag("disable-extensions", true),
 		chromedp.Flag("disable-setuid-sandbox", true),
 		chromedp.Flag("disable-web-security", true),
 		chromedp.Flag("no-first-run", true),
 		chromedp.Flag("no-default-browser-check", true),
 	)
+
 	// create context
 	allocCtx, bcancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer bcancel()
@@ -74,7 +79,7 @@ func DoScreenshot(options libs.Options, raw string) string {
 	// clean chromedp-runner folder
 	cleanUp()
 	if err != nil {
-		utils.ErrorF("screen err: %v - ", raw, err)
+		utils.ErrorF("screen err: %v - %v", raw, err)
 		return PrintScreen(options, screen)
 	}
 
@@ -149,4 +154,76 @@ func cleanUp() {
 	for _, junk := range junks {
 		os.RemoveAll(junk)
 	}
+}
+
+// NewDoScreenshot new do screenshot based on rod
+func NewDoScreenshot(options libs.Options, raw string) string {
+	_, err := url.Parse(raw)
+	if err != nil {
+		utils.ErrorF("invalid input: %v", raw)
+		return ""
+	}
+
+	imageName := strings.Replace(raw, "://", "___", -1)
+	imageScreen := path.Join(options.Screen.ScreenOutput, fmt.Sprintf("%v.png", strings.Replace(imageName, "/", "_", -1)))
+	screen := Screen{
+		URL: raw,
+	}
+	if options.Screen.ImgWidth == 0.0 {
+		 options.Screen.ImgWidth = 1440
+	}
+		if options.Screen.ImgWidth == 0.0 {
+		 options.Screen.ImgHeight = 900
+	}
+	//if options.Debug {
+	//	isHeadless = false
+	//}
+	//
+	//
+	//rodChrome := rod.New().ControlURL(raw).MustConnect()
+	//defer rodChrome.MustClose()
+	//rodChrome.Timeout(time.Duration(options.Screen.ScreenTimeout)*time.Second)
+	//rodChrome.MustIgnoreCertErrors(true)
+
+	//browser.MustNavigate(raw)
+	rodChrome := rod.New().MustConnect().MustPage(raw)
+	defer rodChrome.MustClose()
+
+	rodChrome.Timeout(time.Duration(options.Screen.ScreenTimeout)*time.Second)
+	wait := rodChrome.MustWaitNavigation()
+	utils.DebugF("Doing screenshot on: %v", raw)
+
+	//rodChrome.MustNavigate(raw)
+	rodChrome.MustNavigate(raw)
+	//if err != nil {
+	//	utils.ErrorF("error input: %v", raw)
+	//	return ""
+	//}
+	wait() // until the navigation to settle down
+
+	// simple version
+	rodChrome.MustScreenshot(imageScreen)
+
+	// customization version
+	img, _ := rodChrome.Screenshot(true, &proto.PageCaptureScreenshot{
+		Format:  proto.PageCaptureScreenshotFormatJpeg,
+		Quality: 90,
+		Clip: &proto.PageViewport{
+			X:      0,
+			Y:      0,
+			Width:  float64(options.Screen.ImgHeight),
+			Height: float64(options.Screen.ImgHeight),
+			Scale:  1,
+		},
+		FromSurface: true,
+	})
+	err = rodutils.OutputFile(imageScreen, img)
+
+	// write image
+	if err != nil {
+		utils.ErrorF("write screen err: %v - %v", raw, err)
+		return PrintScreen(options, screen)
+	}
+	screen.Image = imageScreen
+	return PrintScreen(options, screen)
 }

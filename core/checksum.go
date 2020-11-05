@@ -89,7 +89,7 @@ func CalcCheckSum(options libs.Options, url string, client *resty.Client) string
 		_, err = WriteToFile(contentFile, content)
 
 		if err != nil {
-			utils.ErrorF("WriteToFile: ", err)
+			utils.ErrorF("WriteToFile: %v", err)
 			contentFile = "No-Content"
 		}
 	}
