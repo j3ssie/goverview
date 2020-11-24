@@ -31,7 +31,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().IntVarP(&options.Concurrency, "concurrency", "c", 10, "Set the concurrency level")
 	RootCmd.PersistentFlags().IntVarP(&options.Threads, "threads", "t", 5, "Set the threads level for do screenshot")
-	RootCmd.PersistentFlags().IntVarP(&options.Level, "level", "l", 0, "Set level to calculate CheckSum")
+	RootCmd.PersistentFlags().IntVarP(&options.Level, "level", "l", 0, "Set level to calculate CheckSum (default: 0)")
 	// inputs
 	RootCmd.PersistentFlags().StringSliceVarP(&options.Inputs, "inputs", "i", []string{}, "Custom headers (e.g: -H 'Referer: {{.BaseURL}}') (Multiple -H flags are accepted)")
 	RootCmd.PersistentFlags().StringVarP(&options.InputFile, "inputFile", "I", "", "Custom headers (e.g: -H 'Referer: {{.BaseURL}}') (Multiple -H flags are accepted)")

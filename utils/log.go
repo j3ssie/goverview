@@ -37,7 +37,7 @@ func InitLog(options *libs.Options) {
 	//mwr := io.MultiWriter(os.Stdout, f)
 	logger.SetLevel(logrus.InfoLevel)
 	logger = &logrus.Logger{
-		Out:   os.Stderr,
+		Out: os.Stderr,
 		//Out:   mwr,
 		Level: logrus.InfoLevel,
 		Formatter: &prefixed.TextFormatter{

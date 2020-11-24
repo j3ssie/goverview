@@ -3,16 +3,16 @@ package core
 import (
 	"context"
 	"fmt"
+	"net/url"
+
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
-	rodutils "github.com/go-rod/rod/lib/utils"
 	"github.com/j3ssie/goverview/libs"
 	"github.com/j3ssie/goverview/utils"
 	jsoniter "github.com/json-iterator/go"
-	"net/url"
 
 	"io/ioutil"
 	"log"
@@ -64,6 +64,8 @@ func DoScreenshot(options libs.Options, raw string) string {
 		chromedp.Flag("disable-web-security", true),
 		chromedp.Flag("no-first-run", true),
 		chromedp.Flag("no-default-browser-check", true),
+		chromedp.Flag("single-process", true),
+		chromedp.Flag("no-zygote", true),
 	)
 
 	// create context
@@ -169,55 +171,32 @@ func NewDoScreenshot(options libs.Options, raw string) string {
 	screen := Screen{
 		URL: raw,
 	}
-	if options.Screen.ImgWidth == 0.0 {
-		 options.Screen.ImgWidth = 1440
+	if options.Screen.ImgWidth == 0 {
+		options.Screen.ImgWidth = 2500
 	}
-		if options.Screen.ImgWidth == 0.0 {
-		 options.Screen.ImgHeight = 900
+	if options.Screen.ImgHeight == 0 {
+		options.Screen.ImgHeight = 1400
 	}
-	//if options.Debug {
-	//	isHeadless = false
-	//}
-	//
-	//
-	//rodChrome := rod.New().ControlURL(raw).MustConnect()
-	//defer rodChrome.MustClose()
-	//rodChrome.Timeout(time.Duration(options.Screen.ScreenTimeout)*time.Second)
-	//rodChrome.MustIgnoreCertErrors(true)
 
-	//browser.MustNavigate(raw)
-	rodChrome := rod.New().MustConnect().MustPage(raw)
-	defer rodChrome.MustClose()
-
-	rodChrome.Timeout(time.Duration(options.Screen.ScreenTimeout)*time.Second)
-	wait := rodChrome.MustWaitNavigation()
-	utils.DebugF("Doing screenshot on: %v", raw)
-
-	//rodChrome.MustNavigate(raw)
-	rodChrome.MustNavigate(raw)
-	//if err != nil {
-	//	utils.ErrorF("error input: %v", raw)
-	//	return ""
-	//}
-	wait() // until the navigation to settle down
-
-	// simple version
-	rodChrome.MustScreenshot(imageScreen)
-
-	// customization version
-	img, _ := rodChrome.Screenshot(true, &proto.PageCaptureScreenshot{
+	browser := rod.New().MustConnect()
+	// capture entire browser viewport, returning jpg with quality=90
+	buf, err := browser.MustIgnoreCertErrors(true).MustPage(raw).Screenshot(true, &proto.PageCaptureScreenshot{
 		Format:  proto.PageCaptureScreenshotFormatJpeg,
 		Quality: 90,
-		Clip: &proto.PageViewport{
-			X:      0,
-			Y:      0,
-			Width:  float64(options.Screen.ImgHeight),
-			Height: float64(options.Screen.ImgHeight),
-			Scale:  1,
-		},
+		//Clip: &proto.PageViewport{
+		//	X:      0,
+		//	Y:      0,
+		//	Width:  float64(options.Screen.ImgHeight),
+		//	Height: float64(options.Screen.ImgHeight),
+		//	Scale:  1,
+		//},
 		FromSurface: true,
 	})
-	err = rodutils.OutputFile(imageScreen, img)
+	if err != nil {
+		utils.ErrorF("write screen err: %v - %v", raw, err)
+		return PrintScreen(options, screen)
+	}
+	err = ioutil.WriteFile(imageScreen, buf, 0644)
 
 	// write image
 	if err != nil {

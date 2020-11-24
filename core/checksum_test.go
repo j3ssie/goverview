@@ -1,17 +1,23 @@
 package core
 
-//
-//func TestCalcCheckSum(t *testing.T) {
-//	var options libs.Options
-//	options.Level = 5
-//	url := "http://httpbin.org/anything?q=123&id=11"
-//	result := CalcCheckSum(options, url)
-//	fmt.Printf("Level %v ->  Hash: %v \n", options.Level, result)
-//	if result == "" {
-//		t.Errorf("Error CalcCheckSum")
-//	}
-//
-//}
+import (
+	"fmt"
+	"github.com/j3ssie/goverview/libs"
+	"testing"
+)
+
+func TestCalcCheckSum(t *testing.T) {
+	var options libs.Options
+	options.Level = 5
+	url := "http://httpbin.org/anything?q=123&id=11"
+	client := BuildClient(options)
+	result := CalcCheckSum(options, url, client)
+	fmt.Printf("Level %v ->  Hash: %v \n", options.Level, result)
+	if result == "" {
+		t.Errorf("Error CalcCheckSum")
+	}
+}
+
 //
 //func TestCalcCheckSum0(t *testing.T) {
 //	var options libs.Options

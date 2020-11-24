@@ -10,8 +10,8 @@ go get -u github.com/j3ssie/goverview
 
 ## Example Commands
 
-```
-goverview - Overview about list of URLs - beta v0.2.0 by @j3ssiejjj
+```shell
+goverview - Overview about list of URLs - beta v0.2.2 by @j3ssiejjj
 
 Usage:
   goverview [command]

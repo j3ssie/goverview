@@ -26,7 +26,7 @@ func init() {
 	RootCmd.AddCommand(screenCmd)
 }
 
-func runScreen(cmd *cobra.Command, _ []string) error {
+func runScreen(_ *cobra.Command, _ []string) error {
 	// prepare output
 	prepareOutput()
 	var wg sync.WaitGroup
@@ -42,7 +42,8 @@ func runScreen(cmd *cobra.Command, _ []string) error {
 		}
 
 		utils.InforF("[screenshot] %v", job)
-		out := core.DoScreenshot(options, job)
+		// out := core.DoScreenshot(options, job)
+		out := core.NewDoScreenshot(options, job)
 		if out != "" {
 			fmt.Println(out)
 			core.AppendTo(options.ScreenShotFile, out)

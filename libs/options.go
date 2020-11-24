@@ -41,13 +41,13 @@ type Options struct {
 
 // ProbeOpt options for probing
 type ProbeOpt struct {
-	OnlySummary  bool
-	WordsSummary bool
+	OnlySummary   bool
+	WordsSummary  bool
 	ContentOutput string
 }
 
 type ScreenOpt struct {
-	ScreenOutput   string
+	ScreenOutput  string
 	ScreenTimeout int
 	ImgWidth      int
 	ImgHeight     int

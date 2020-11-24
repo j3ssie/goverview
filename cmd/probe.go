@@ -22,12 +22,12 @@ func init() {
 		RunE:  runProbe,
 	}
 	probeCmd.Flags().BoolVarP(&options.SaveReponse, "save-response", "M", false, "Save HTTP response")
-	probeCmd.Flags().BoolVarP(&options.Probe.OnlySummary,"no-output", "N", false, "Only store summary file")
-	probeCmd.Flags().BoolVar(&options.Probe.WordsSummary,"words",  false, "Get words from ")
+	probeCmd.Flags().BoolVarP(&options.Probe.OnlySummary, "no-output", "N", false, "Only store summary file")
+	probeCmd.Flags().BoolVar(&options.Probe.WordsSummary, "words", false, "Get words from ")
 	RootCmd.AddCommand(probeCmd)
 }
 
-func runProbe(cmd *cobra.Command, _ []string) error {
+func runProbe(_ *cobra.Command, _ []string) error {
 	// prepare output
 	prepareOutput()
 	var wg sync.WaitGroup
@@ -47,7 +47,7 @@ func runProbe(cmd *cobra.Command, _ []string) error {
 		out := core.CalcCheckSum(options, job, client)
 		if out != "" {
 			fmt.Println(out)
-			if options.Probe.OnlySummary || !options.NoOutput{
+			if options.Probe.OnlySummary || !options.NoOutput {
 				core.AppendTo(options.ContentFile, out)
 			}
 			// only print output but not store it into a file
