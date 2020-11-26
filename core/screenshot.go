@@ -26,8 +26,15 @@ import (
 
 // Screen overview struct
 type Screen struct {
-	URL   string `json:"url"`
-	Image string `json:"image"`
+	URL          string `json:"url"`
+	Image        string `json:"image"`
+	ContentFile  string `json:"content_file"`
+	Technologies string `json:"tech"`
+	// with check sum
+	Title    string `json:"title"`
+	CheckSum string `json:"checksum"`
+	Status   string `json:"status"`
+	//External []string `json:"external"`
 }
 
 // PrintScreen print probe string
@@ -50,6 +57,7 @@ func PrintScreen(options libs.Options, screen Screen) string {
 func DoScreenshot(options libs.Options, raw string) string {
 	imageName := strings.Replace(raw, "://", "___", -1)
 	imageScreen := path.Join(options.Screen.ScreenOutput, fmt.Sprintf("%v.png", strings.Replace(imageName, "/", "_", -1)))
+
 	screen := Screen{
 		URL: raw,
 	}
@@ -160,7 +168,7 @@ func cleanUp() {
 
 // NewDoScreenshot new do screenshot based on rod
 func NewDoScreenshot(options libs.Options, raw string) string {
-	_, err := url.Parse(raw)
+	_, err := url.ParseRequestURI(raw)
 	if err != nil {
 		utils.ErrorF("invalid input: %v", raw)
 		return ""
@@ -168,8 +176,16 @@ func NewDoScreenshot(options libs.Options, raw string) string {
 
 	imageName := strings.Replace(raw, "://", "___", -1)
 	imageScreen := path.Join(options.Screen.ScreenOutput, fmt.Sprintf("%v.png", strings.Replace(imageName, "/", "_", -1)))
+
+	contentFile := fmt.Sprintf("%s.txt", strings.Replace(raw, "://", "___", -1))
+	contentFile = strings.Replace(contentFile, "?", "_", -1)
+	contentFile = strings.Replace(contentFile, "/", "_", -1)
+	contentFile = path.Join(options.Screen.ScreenOutput, contentFile)
+	content := fmt.Sprintf("> GET %s\n", raw)
+
 	screen := Screen{
-		URL: raw,
+		URL:         raw,
+		ContentFile: contentFile,
 	}
 	if options.Screen.ImgWidth == 0 {
 		options.Screen.ImgWidth = 2500
@@ -178,9 +194,53 @@ func NewDoScreenshot(options libs.Options, raw string) string {
 		options.Screen.ImgHeight = 1400
 	}
 
-	browser := rod.New().MustConnect()
+	page := rod.New().MustConnect().MustIgnoreCertErrors(true).MustPage("")
+	ctx, cancel := context.WithCancel(context.Background())
+	browser := page.Context(ctx)
+
+	go func() {
+		time.Sleep(time.Duration(options.Screen.ScreenTimeout) * time.Second)
+		cancel()
+	}()
+	err = rod.Try(func() {
+		browser.MustNavigate(raw)
+	})
+	if err != nil {
+		utils.ErrorF("error screenshot")
+		return PrintScreen(options, screen)
+	}
+
+	//browser.MustNavigate(raw)
+
+	//browser := rod.New().MustConnect().MustIgnoreCertErrors(true).MustPage(raw)
+	//browser := rod.New().MustConnect().MustIgnoreCertErrors(true).MustPage(raw)
+	//defer browser.MustClose()
+	//
+	//err = browser.WaitLoad()
+	//if err != nil {
+	//	utils.ErrorF("error screenshot")
+	//	return PrintScreen(options, screen)
+	//}
+	//browser.Timeout(time.Duration(options.Screen.ScreenTimeout) * time.Second)
+
+	// get headers here
+	go browser.EachEvent(func(e *proto.NetworkResponseReceived) {
+		// only get event match base URL
+		if strings.HasPrefix(e.Response.URL, raw) {
+			//if e.Response.URL == raw {
+			screen.Status = e.Response.StatusText
+			for k, v := range e.Response.Headers {
+				content += fmt.Sprintf("< %s: %s\n", k, v)
+			}
+		}
+		//
+		//spew.Dump(e.Response.RequestHeaders)
+		//fmt.Println("Status: ", e.Response.Status, e.Response.URL, e.Response.Headers)
+		//spew.Dump(e.Response)
+	})()
+	browser.MustWaitLoad()
 	// capture entire browser viewport, returning jpg with quality=90
-	buf, err := browser.MustIgnoreCertErrors(true).MustPage(raw).Screenshot(true, &proto.PageCaptureScreenshot{
+	buf, err := browser.Screenshot(true, &proto.PageCaptureScreenshot{
 		Format:  proto.PageCaptureScreenshotFormatJpeg,
 		Quality: 90,
 		//Clip: &proto.PageViewport{
@@ -192,6 +252,14 @@ func NewDoScreenshot(options libs.Options, raw string) string {
 		//},
 		FromSurface: true,
 	})
+
+	// store HTML data too in case we miss with probing
+	html := browser.MustElement("html").MustHTML()
+	content += html
+	_, err = WriteToFile(contentFile, content)
+	techs := LocalFingerPrint(options, contentFile)
+	screen.Technologies = techs
+
 	if err != nil {
 		utils.ErrorF("write screen err: %v - %v", raw, err)
 		return PrintScreen(options, screen)

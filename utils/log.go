@@ -50,6 +50,9 @@ func InitLog(options *libs.Options) {
 		logger.SetOutput(ioutil.Discard)
 		return
 	}
+	if options.Verbose == true {
+		logger.SetOutput(os.Stdout)
+	}
 	if options.Debug == true {
 		logger.SetLevel(logrus.DebugLevel)
 	}

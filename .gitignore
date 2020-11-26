@@ -1,5 +1,6 @@
 .DS_STORE
 .goreleaser.yml
+*.DS_STORE
 .idea
 dist
 out*

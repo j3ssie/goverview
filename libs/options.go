@@ -37,6 +37,7 @@ type Options struct {
 	ImgHeight       int
 	Probe           ProbeOpt
 	Screen          ScreenOpt
+	Fin             FinOpt
 }
 
 // ProbeOpt options for probing
@@ -51,4 +52,9 @@ type ScreenOpt struct {
 	ScreenTimeout int
 	ImgWidth      int
 	ImgHeight     int
+}
+
+type FinOpt struct {
+	TechFile string
+	Depth    int
 }

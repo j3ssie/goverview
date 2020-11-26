@@ -39,6 +39,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&options.JsonOutput, "json", "j", false, "Output as JSON")
 	RootCmd.PersistentFlags().BoolVarP(&options.NoOutput, "no-output", "N", false, "No output")
 	RootCmd.PersistentFlags().StringVarP(&options.Output, "output", "o", "out", "Output Directory")
+	RootCmd.PersistentFlags().StringVarP(&options.Fin.TechFile, "tech", "a", "technologies.json", "Technology File")
 	RootCmd.PersistentFlags().StringVarP(&options.ScreenShotFile, "screenshot", "S", "", "Summary File for Screenshot (default 'out/screenshot-summary.txt')")
 	RootCmd.PersistentFlags().StringVarP(&options.ContentFile, "content", "C", "", "Summary File for Content (default 'out/content-summary.txt')")
 	RootCmd.PersistentFlags().StringVarP(&options.WordList, "wordlist", "W", "", "Wordlists File build from HTTP Content (default 'out/wordlists.txt')")
