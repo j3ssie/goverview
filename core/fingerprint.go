@@ -3,13 +3,6 @@ package core
 import (
 	"bytes"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/emirpasic/gods/maps/treemap"
-	"github.com/emirpasic/gods/sets/treeset"
-	"github.com/gocolly/colly"
-	"github.com/gocolly/colly/extensions"
-	"github.com/j3ssie/goverview/libs"
-	"github.com/j3ssie/goverview/utils"
 	"net/http"
 	"path"
 	"path/filepath"
@@ -17,6 +10,13 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/emirpasic/gods/maps/treemap"
+	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/extensions"
+	"github.com/j3ssie/goverview/libs"
+	"github.com/j3ssie/goverview/utils"
 )
 
 // Result type encapsulates the result information from a given host
@@ -295,26 +295,30 @@ func LocalFingerPrint(options libs.Options, filename string) string {
 	c.Wait()
 
 	var finalTech string
-	set := treeset.NewWithStringComparator()
+	// set := treeset.NewWithStringComparator()
 	for _, result := range results {
 		for _, match := range result.Matches {
 			sort.Strings(match.CatNames)
-			app := fmt.Sprintf("%s/%s", match.AppName, match.Version)
-			row := []string{
-				app,
-				strings.Join(match.CatNames, ","),
+			app := fmt.Sprintf("%s", match.AppName)
+			if match.Version != "" {
+				app = fmt.Sprintf("%s/%s", match.AppName, match.Version)
 			}
+			finalTech += fmt.Sprintf("%s,", app)
+			// row := []string{
+			// 	app,
+			// 	strings.Join(match.CatNames, ","),
+			// }
 
-			tech := strings.Join(row, "|")
-			if !set.Contains(tech) {
-				set.Add(tech)
-				finalTech = fmt.Sprintf("%s", tech)
-			}
+			// tech := strings.Join(row, "|")
+			// if !set.Contains(tech) {
+			// 	set.Add(tech)
+			// }
 		}
 	}
 
 	if finalTech == "" {
 		utils.ErrorF("no tech found from: %s", filename)
 	}
+	finalTech = strings.TrimRight(finalTech, ",")
 	return finalTech
 }
