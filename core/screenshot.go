@@ -238,7 +238,15 @@ func NewDoScreenshot(options libs.Options, raw string) string {
 		//fmt.Println("Status: ", e.Response.Status, e.Response.URL, e.Response.Headers)
 		//spew.Dump(e.Response)
 	})()
-	browser.MustWaitLoad()
+
+	err = rod.Try(func() {
+		browser.MustWaitLoad()
+	})
+	if err != nil {
+		utils.ErrorF("error screenshot")
+		return PrintScreen(options, screen)
+	}
+
 	// capture entire browser viewport, returning jpg with quality=90
 	buf, err := browser.Screenshot(true, &proto.PageCaptureScreenshot{
 		Format:  proto.PageCaptureScreenshotFormatJpeg,
