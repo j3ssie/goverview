@@ -20,6 +20,7 @@ func init() {
 
 	// screen options
 	screenCmd.Flags().BoolVar(&options.AbsPath, "A", false, "Use Absolute path in summary")
+	screenCmd.Flags().BoolVar(&options.Screen.UseChromedp, "cdp", false, "Use old chromedp instead of rod")
 	screenCmd.Flags().IntVar(&options.Screen.ScreenTimeout, "screen-timeout", 40, "screenshot timeout")
 	screenCmd.Flags().IntVar(&options.Screen.ImgHeight, "height", 0, "Height screenshot")
 	screenCmd.Flags().IntVar(&options.Screen.ImgWidth, "width", 0, "Width screenshot")
@@ -47,8 +48,12 @@ func runScreen(_ *cobra.Command, _ []string) error {
 		}
 
 		utils.InforF("[screenshot] %v", job)
-		// out := core.DoScreenshot(options, job)
-		out := core.NewDoScreenshot(options, job)
+		var out string
+		if options.Screen.UseChromedp {
+			out = core.DoScreenshot(options, job)
+		} else {
+			out = core.NewDoScreenshot(options, job)
+		}
 		if out != "" {
 			fmt.Println(out)
 			core.AppendTo(options.ScreenShotFile, out)
