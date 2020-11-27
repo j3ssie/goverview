@@ -29,7 +29,10 @@ func init() {
 func runScreen(_ *cobra.Command, _ []string) error {
 	// prepare output
 	prepareOutput()
-	core.LoadTechs(options)
+	err := core.LoadTechs(options)
+	if err == nil {
+		options.Fin.Loaded = true
+	}
 
 	var wg sync.WaitGroup
 	p, _ := ants.NewPoolWithFunc(options.Concurrency, func(i interface{}) {

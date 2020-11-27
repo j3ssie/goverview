@@ -57,4 +57,5 @@ type ScreenOpt struct {
 type FinOpt struct {
 	TechFile string
 	Depth    int
+	Loaded   bool
 }

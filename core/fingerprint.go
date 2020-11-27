@@ -74,7 +74,7 @@ func LocalFingerPrint(options libs.Options, filename string) string {
 		return ""
 	}
 
-	if len(WA.AppDefs.Apps) == 0 {
+	if !options.Fin.Loaded {
 		utils.ErrorF("error loading technology from: %s", options.Fin.TechFile)
 		return ""
 	}

@@ -194,16 +194,28 @@ func NewDoScreenshot(options libs.Options, raw string) string {
 		options.Screen.ImgHeight = 1400
 	}
 
-	page := rod.New().MustConnect().MustIgnoreCertErrors(true).MustPage("")
-	ctx, cancel := context.WithCancel(context.Background())
-	browser := page.Context(ctx)
-
-	go func() {
-		time.Sleep(time.Duration(options.Screen.ScreenTimeout) * time.Second)
-		cancel()
-	}()
+	browser := rod.New().MustConnect().MustIgnoreCertErrors(true).MustPage("")
 	err = rod.Try(func() {
 		browser.MustNavigate(raw)
+
+		browser.Timeout(time.Duration(options.Screen.ScreenTimeout) * time.Second)
+		browser.MustWaitLoad()
+
+		go browser.EachEvent(func(e *proto.NetworkResponseReceived) {
+			// only get event match base URL
+			if strings.HasPrefix(e.Response.URL, raw) {
+				//if e.Response.URL == raw {
+				screen.Status = e.Response.StatusText
+				for k, v := range e.Response.Headers {
+					content += fmt.Sprintf("< %s: %s\n", k, v)
+				}
+			}
+			//
+			//spew.Dump(e.Response.RequestHeaders)
+			//fmt.Println("Status: ", e.Response.Status, e.Response.URL, e.Response.Headers)
+			//spew.Dump(e.Response)
+		})()
+
 	})
 	if err != nil {
 		utils.ErrorF("error screenshot")
@@ -224,28 +236,6 @@ func NewDoScreenshot(options libs.Options, raw string) string {
 	//browser.Timeout(time.Duration(options.Screen.ScreenTimeout) * time.Second)
 
 	// get headers here
-	go browser.EachEvent(func(e *proto.NetworkResponseReceived) {
-		// only get event match base URL
-		if strings.HasPrefix(e.Response.URL, raw) {
-			//if e.Response.URL == raw {
-			screen.Status = e.Response.StatusText
-			for k, v := range e.Response.Headers {
-				content += fmt.Sprintf("< %s: %s\n", k, v)
-			}
-		}
-		//
-		//spew.Dump(e.Response.RequestHeaders)
-		//fmt.Println("Status: ", e.Response.Status, e.Response.URL, e.Response.Headers)
-		//spew.Dump(e.Response)
-	})()
-
-	err = rod.Try(func() {
-		browser.MustWaitLoad()
-	})
-	if err != nil {
-		utils.ErrorF("error screenshot")
-		return PrintScreen(options, screen)
-	}
 
 	// capture entire browser viewport, returning jpg with quality=90
 	buf, err := browser.Screenshot(true, &proto.PageCaptureScreenshot{
@@ -265,8 +255,10 @@ func NewDoScreenshot(options libs.Options, raw string) string {
 	html := browser.MustElement("html").MustHTML()
 	content += html
 	_, err = WriteToFile(contentFile, content)
-	techs := LocalFingerPrint(options, contentFile)
-	screen.Technologies = techs
+	if options.Fin.Loaded {
+		techs := LocalFingerPrint(options, contentFile)
+		screen.Technologies = techs
+	}
 
 	if err != nil {
 		utils.ErrorF("write screen err: %v - %v", raw, err)
