@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 	"fmt"
+	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/network"
 	"net/url"
 
 	"github.com/chromedp/cdproto/emulation"
@@ -58,8 +60,15 @@ func DoScreenshot(options libs.Options, raw string) string {
 	imageName := strings.Replace(raw, "://", "___", -1)
 	imageScreen := path.Join(options.Screen.ScreenOutput, fmt.Sprintf("%v.png", strings.Replace(imageName, "/", "_", -1)))
 
+	contentFile := fmt.Sprintf("%s.txt", strings.Replace(raw, "://", "___", -1))
+	contentFile = strings.Replace(contentFile, "?", "_", -1)
+	contentFile = strings.Replace(contentFile, "/", "_", -1)
+	contentFile = path.Join(options.Screen.ScreenOutput, contentFile)
+	content := fmt.Sprintf("> GET %s\n", raw)
+
 	screen := Screen{
-		URL: raw,
+		URL:         raw,
+		ContentFile: contentFile,
 	}
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
@@ -85,12 +94,41 @@ func DoScreenshot(options libs.Options, raw string) string {
 
 	// capture screenshot of an element
 	var buf []byte
-	err := chromedp.Run(ctx, fullScreenshot(options, raw, 90, &buf))
+	var res libs.Response
+
+	err := chromedp.Run(ctx,
+		fullScreenshot(ctx, options, raw, 90, &buf, &res),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			node, err := dom.GetDocument().Do(ctx)
+			if err != nil {
+				return err
+			}
+			res.Body, err = dom.GetOuterHTML().WithNodeID(node.NodeID).Do(ctx)
+			return err
+		}),
+	)
+
 	// clean chromedp-runner folder
 	cleanUp()
 	if err != nil {
 		utils.ErrorF("screen err: %v - %v", raw, err)
 		return PrintScreen(options, screen)
+	}
+	//spew.Dump(res)
+
+	if res.StatusCode != 0 {
+		content = res.Status + "\n"
+		for _, head := range res.Headers {
+			for k, v := range head {
+				content += fmt.Sprintf("< %s: %s\n", k, v)
+			}
+		}
+		content += res.Body
+		_, err = WriteToFile(contentFile, content)
+		if options.Fin.Loaded {
+			techs := LocalFingerPrint(options, contentFile)
+			screen.Technologies = techs
+		}
 	}
 
 	// write image
@@ -105,9 +143,43 @@ func DoScreenshot(options libs.Options, raw string) string {
 // fullScreenshot takes a screenshot of the entire browser viewport.
 // Liberally copied from puppeteer's source.
 // Note: this will override the viewport emulation settings.
-func fullScreenshot(options libs.Options, urlstr string, quality int64, res *[]byte) chromedp.Tasks {
+func fullScreenshot(chromeContext context.Context, options libs.Options, urlstr string, quality int64, imgContent *[]byte, res *libs.Response) chromedp.Tasks {
+
+	// setup a listener for events
+	var uu string
+	//var requestHeaders map[string]interface{}
+	chromedp.ListenTarget(chromeContext, func(event interface{}) {
+		// get which type of event it is
+		switch msg := event.(type) {
+		// just before request sent
+		case *network.EventRequestWillBeSent:
+			request := msg.Request
+			// see if we have been redirected
+			// if so, change the URL that we are tracking
+			if msg.RedirectResponse != nil {
+				uu = request.URL
+			}
+
+		// once we have the full response
+		case *network.EventResponseReceived:
+			response := msg.Response
+			// is the request we want the status/headers on?
+			if response.URL == uu {
+				res.StatusCode = int(response.Status)
+				res.Status = fmt.Sprintf("%v %v", res.StatusCode, response.StatusText)
+				// fmt.Printf(" url: %s\n", response.URL)
+				// fmt.Printf(" status code: %d\n", res.StatusCode)
+				for k, v := range response.Headers {
+					header := make(map[string]string)
+					// fmt.Println(k, v)
+					header[k] = v.(string)
+					res.Headers = append(res.Headers, header)
+				}
+			}
+		}
+	})
+
 	return chromedp.Tasks{
-		chromedp.Navigate(urlstr),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			// get layout metrics
 			_, _, contentSize, err := page.GetLayoutMetrics().Do(ctx)
@@ -135,7 +207,7 @@ func fullScreenshot(options libs.Options, urlstr string, quality int64, res *[]b
 			}
 
 			// capture screenshot
-			*res, err = page.CaptureScreenshot().
+			*imgContent, err = page.CaptureScreenshot().
 				WithQuality(quality).
 				WithClip(&page.Viewport{
 					X:      contentSize.X,
@@ -144,11 +216,15 @@ func fullScreenshot(options libs.Options, urlstr string, quality int64, res *[]b
 					Height: float64(height),
 					Scale:  1,
 				}).Do(ctx)
+
 			if err != nil {
 				return err
 			}
 			return nil
 		}),
+		network.Enable(),
+		//network.SetExtraHTTPHeaders(network.Headers(requestHeaders)),
+		chromedp.Navigate(urlstr),
 	}
 }
 
