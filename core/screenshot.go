@@ -71,6 +71,7 @@ func DoScreenshot(options libs.Options, raw string) string {
 		ContentFile: contentFile,
 	}
 
+
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.Flag("headless", true),
 		chromedp.Flag("ignore-certificate-errors", true),
@@ -101,6 +102,7 @@ func DoScreenshot(options libs.Options, raw string) string {
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			node, err := dom.GetDocument().Do(ctx)
 			if err != nil {
+				utils.ErrorF("Error get content: %v", err)
 				return err
 			}
 			res.Body, err = dom.GetOuterHTML().WithNodeID(node.NodeID).Do(ctx)
@@ -116,7 +118,7 @@ func DoScreenshot(options libs.Options, raw string) string {
 	}
 	//spew.Dump(res)
 
-	if res.StatusCode != 0 {
+	if res.StatusCode != 0 || len(res.Body) > 0 {
 		content = res.Status + "\n"
 		for _, head := range res.Headers {
 			for k, v := range head {
@@ -144,7 +146,6 @@ func DoScreenshot(options libs.Options, raw string) string {
 // Liberally copied from puppeteer's source.
 // Note: this will override the viewport emulation settings.
 func fullScreenshot(chromeContext context.Context, options libs.Options, urlstr string, quality int64, imgContent *[]byte, res *libs.Response) chromedp.Tasks {
-
 	// setup a listener for events
 	var uu string
 	//var requestHeaders map[string]interface{}
@@ -180,6 +181,7 @@ func fullScreenshot(chromeContext context.Context, options libs.Options, urlstr 
 	})
 
 	return chromedp.Tasks{
+		chromedp.Navigate(urlstr),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			// get layout metrics
 			_, _, contentSize, err := page.GetLayoutMetrics().Do(ctx)
@@ -224,7 +226,6 @@ func fullScreenshot(chromeContext context.Context, options libs.Options, urlstr 
 		}),
 		network.Enable(),
 		//network.SetExtraHTTPHeaders(network.Headers(requestHeaders)),
-		chromedp.Navigate(urlstr),
 	}
 }
 
