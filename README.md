@@ -5,7 +5,7 @@ goverview - Get overview about list of URLs
 ## Installation
 
 ```
-go get -u github.com/j3ssie/goverview
+GO111MODULE=on go get github.com/j3ssie/goverview
 ```
 
 ## Example Commands
@@ -73,4 +73,4 @@ Examples:
 
 ## License
 
-`goverview` is made with ♥  by [@j3ssiejjj](https://twitter.com/j3ssiejjj) and it is released under the MIT license.
+`goverview` is made with ♥ by [@j3ssiejjj](https://twitter.com/j3ssiejjj) and it is released under the MIT license.

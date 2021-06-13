@@ -44,7 +44,7 @@ func runProbe(_ *cobra.Command, _ []string) error {
 		}
 
 		utils.InforF("[probing] %v", job)
-		out := core.CalcCheckSum(options, job, client)
+		out := core.Sending(options, job, client)
 		if out != "" {
 			fmt.Println(out)
 			if options.Probe.OnlySummary || !options.NoOutput {

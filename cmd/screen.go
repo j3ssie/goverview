@@ -20,7 +20,8 @@ func init() {
 
 	// screen options
 	screenCmd.Flags().BoolVar(&options.AbsPath, "A", false, "Use Absolute path in summary")
-	screenCmd.Flags().BoolVar(&options.Screen.UseChromedp, "cdp", false, "Use old chromedp instead of rod")
+	screenCmd.Flags().BoolVar(&options.Screen.UseChromedp, "cdp", true, "Use old chromedp instead of rod")
+	screenCmd.Flags().BoolVar(&options.Screen.UseRod, "rod", false, "Use rod library")
 	screenCmd.Flags().IntVar(&options.Screen.ScreenTimeout, "screen-timeout", 40, "screenshot timeout")
 	screenCmd.Flags().IntVar(&options.Screen.ImgHeight, "height", 0, "Height screenshot")
 	screenCmd.Flags().IntVar(&options.Screen.ImgWidth, "width", 0, "Width screenshot")

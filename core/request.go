@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-resty/resty"
+	"github.com/go-resty/resty/v2"
 	"github.com/j3ssie/goverview/libs"
 	"github.com/j3ssie/goverview/utils"
 	"github.com/sirupsen/logrus"

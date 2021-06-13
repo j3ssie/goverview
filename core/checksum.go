@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	"github.com/go-resty/resty"
+	"github.com/go-resty/resty/v2"
 	"github.com/j3ssie/goverview/libs"
 	"github.com/j3ssie/goverview/utils"
 	"path"
@@ -44,9 +44,10 @@ func PrintOverview(options libs.Options, overview Overview) string {
 	return fmt.Sprintf("%v ;; %v ;; %v ;; %v", overview.URL, overview.Title, overview.CheckSum, overview.ContentFile)
 }
 
-// CalcCheckSum calculate checksum
-func CalcCheckSum(options libs.Options, url string, client *resty.Client) string {
+func CalcCheckSum(options libs.Options, url string, res libs.Response) Overview {
 	var result string
+	var err error
+
 	title := "No-Title"
 	hash := "No-CheckSum"
 	contentFile := "No-Content"
@@ -57,13 +58,13 @@ func CalcCheckSum(options libs.Options, url string, client *resty.Client) string
 		ContentFile: "",
 		Redirect:    "No-Redirect",
 	}
-	res, err := JustSend(options, url, client)
-	if err != nil {
-		utils.DebugF("Headers: \n%v", res.BeautifyHeader)
-		utils.DebugF("Body: \n%v", res.Beautify)
-		utils.ErrorF("Error sending: %v", url)
-		//return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, hash, contentFile)
-		return ""
+
+	overview.Status = fmt.Sprintf("%d", res.StatusCode)
+	overview.ResponseTime = fmt.Sprintf("%v", res.ResponseTime)
+	overview.ContentLength = fmt.Sprintf("%v", res.Length)
+
+	if res.Location != "" {
+		overview.Redirect = res.Location
 	}
 
 	overview.Status = fmt.Sprintf("%d", res.StatusCode)
@@ -111,7 +112,7 @@ func CalcCheckSum(options libs.Options, url string, client *resty.Client) string
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(res.Body))
 	if err != nil {
 		utils.ErrorF("Error Parsing Body: %v", url)
-		return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, GenHash(res.Body), contentFile)
+		return overview
 	}
 	title = GetTitle(doc)
 	hash = GenHash(fmt.Sprintf("%v-%v", title, result))
@@ -138,8 +139,22 @@ func CalcCheckSum(options libs.Options, url string, client *resty.Client) string
 	overview.CheckSum = hash
 	overview.Title = title
 	overview.ContentFile = contentFile
+
+	return overview
+}
+
+// Sending sending request and calculate checksum
+func Sending(options libs.Options, url string, client *resty.Client) string {
+
+	res, err := JustSend(options, url, client)
+	if err != nil {
+		utils.DebugF("Headers: \n%v", res.BeautifyHeader)
+		utils.DebugF("Body: \n%v", res.Beautify)
+		utils.ErrorF("Error sending: %v", url)
+		return ""
+	}
+	overview := CalcCheckSum(options, url, res)
 	return PrintOverview(options, overview)
-	//return fmt.Sprintf("%v ;; %v ;; %v ;; %v", url, title, hash, contentFile)
 }
 
 // GetTitle get title of response

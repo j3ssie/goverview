@@ -98,7 +98,7 @@ func LocalFingerPrint(options libs.Options, filename string) string {
 	utils.DebugF("Fingerprint at reading: %v", htmlFile)
 	c.Visit(fmt.Sprintf("file:///%s", htmlFile))
 
-	extensions.RandomMobileUserAgent(c)
+	extensions.RandomUserAgent(c)
 	extensions.Referer(c)
 
 	// Handle url

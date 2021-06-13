@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/fetch"
 	"github.com/chromedp/cdproto/network"
 	"net/url"
 
-	"github.com/chromedp/cdproto/emulation"
-	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
@@ -18,7 +17,6 @@ import (
 
 	"io/ioutil"
 	"log"
-	"math"
 	"os"
 	"path"
 	"path/filepath"
@@ -71,19 +69,16 @@ func DoScreenshot(options libs.Options, raw string) string {
 		ContentFile: contentFile,
 	}
 
-
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.Flag("headless", true),
 		chromedp.Flag("ignore-certificate-errors", true),
 		chromedp.Flag("disable-gpu", true),
-		chromedp.Flag("enable-automation", false),
+		chromedp.Flag("enable-automation", true),
 		chromedp.Flag("disable-extensions", true),
 		chromedp.Flag("disable-setuid-sandbox", true),
 		chromedp.Flag("disable-web-security", true),
 		chromedp.Flag("no-first-run", true),
 		chromedp.Flag("no-default-browser-check", true),
-		chromedp.Flag("single-process", true),
-		chromedp.Flag("no-zygote", true),
 	)
 
 	// create context
@@ -99,6 +94,7 @@ func DoScreenshot(options libs.Options, raw string) string {
 
 	err := chromedp.Run(ctx,
 		fullScreenshot(ctx, options, raw, 90, &buf, &res),
+		fetch.Enable().WithPatterns([]*fetch.RequestPattern{{RequestStage: fetch.RequestStageResponse}}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			node, err := dom.GetDocument().Do(ctx)
 			if err != nil {
@@ -116,7 +112,6 @@ func DoScreenshot(options libs.Options, raw string) string {
 		utils.ErrorF("screen err: %v - %v", raw, err)
 		return PrintScreen(options, screen)
 	}
-	//spew.Dump(res)
 
 	if res.StatusCode != 0 || len(res.Body) > 0 {
 		content = res.Status + "\n"
@@ -138,7 +133,12 @@ func DoScreenshot(options libs.Options, raw string) string {
 		utils.ErrorF("write screen err: %v - %v", raw, err)
 		return PrintScreen(options, screen)
 	}
+
 	screen.Image = imageScreen
+	screen.Status = res.Status
+	overview := CalcCheckSum(options, raw, res)
+	screen.Title = overview.Title
+	screen.CheckSum = overview.CheckSum
 	return PrintScreen(options, screen)
 }
 
@@ -147,8 +147,9 @@ func DoScreenshot(options libs.Options, raw string) string {
 // Note: this will override the viewport emulation settings.
 func fullScreenshot(chromeContext context.Context, options libs.Options, urlstr string, quality int64, imgContent *[]byte, res *libs.Response) chromedp.Tasks {
 	// setup a listener for events
-	var uu string
 	//var requestHeaders map[string]interface{}
+	var uu string
+
 	chromedp.ListenTarget(chromeContext, func(event interface{}) {
 		// get which type of event it is
 		switch msg := event.(type) {
@@ -167,9 +168,9 @@ func fullScreenshot(chromeContext context.Context, options libs.Options, urlstr 
 			// is the request we want the status/headers on?
 			if response.URL == uu {
 				res.StatusCode = int(response.Status)
-				res.Status = fmt.Sprintf("%v %v", res.StatusCode, response.StatusText)
-				// fmt.Printf(" url: %s\n", response.URL)
-				// fmt.Printf(" status code: %d\n", res.StatusCode)
+				res.Status = strings.TrimSpace(fmt.Sprintf("%v %v", res.StatusCode, response.StatusText))
+				//fmt.Printf(" url: %s\n", response.URL)
+				//fmt.Printf(" status code: %d\n", res.StatusCode)
 				for k, v := range response.Headers {
 					header := make(map[string]string)
 					// fmt.Println(k, v)
@@ -180,52 +181,11 @@ func fullScreenshot(chromeContext context.Context, options libs.Options, urlstr 
 		}
 	})
 
+	//var imageContent *[]byte
 	return chromedp.Tasks{
 		chromedp.Navigate(urlstr),
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			// get layout metrics
-			_, _, contentSize, err := page.GetLayoutMetrics().Do(ctx)
-			if err != nil {
-				return err
-			}
-
-			width, height := int64(math.Ceil(contentSize.Width)), int64(math.Ceil(contentSize.Height))
-			//imgWidth       int
-			//imgHeight      int
-			if options.Screen.ImgWidth != 0 && options.Screen.ImgHeight != 0 {
-				width = int64(options.Screen.ImgWidth)
-				height = int64(options.Screen.ImgHeight)
-			}
-
-			// force viewport emulation
-			err = emulation.SetDeviceMetricsOverride(width, height, 1, false).
-				WithScreenOrientation(&emulation.ScreenOrientation{
-					Type:  emulation.OrientationTypePortraitPrimary,
-					Angle: 0,
-				}).
-				Do(ctx)
-			if err != nil {
-				return err
-			}
-
-			// capture screenshot
-			*imgContent, err = page.CaptureScreenshot().
-				WithQuality(quality).
-				WithClip(&page.Viewport{
-					X:      contentSize.X,
-					Y:      contentSize.Y,
-					Width:  float64(width),
-					Height: float64(height),
-					Scale:  1,
-				}).Do(ctx)
-
-			if err != nil {
-				return err
-			}
-			return nil
-		}),
+		chromedp.FullScreenshot(imgContent, int(quality)),
 		network.Enable(),
-		//network.SetExtraHTTPHeaders(network.Headers(requestHeaders)),
 	}
 }
 
@@ -242,6 +202,8 @@ func cleanUp() {
 		os.RemoveAll(junk)
 	}
 }
+
+/* Start using new lib */
 
 // NewDoScreenshot new do screenshot based on rod
 func NewDoScreenshot(options libs.Options, raw string) string {

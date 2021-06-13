@@ -52,7 +52,8 @@ type ScreenOpt struct {
 	ScreenTimeout int
 	ImgWidth      int
 	ImgHeight     int
-	UseChromedp     bool
+	UseChromedp   bool
+	UseRod        bool
 }
 
 type FinOpt struct {
