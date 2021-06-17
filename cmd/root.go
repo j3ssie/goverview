@@ -51,6 +51,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&options.SaveRedirectURL, "save-redirect", "R", false, "Save redirect URL to overview file too")
 	RootCmd.PersistentFlags().IntVar(&options.Timeout, "timeout", 15, "HTTP timeout")
 	RootCmd.PersistentFlags().IntVar(&options.Retry, "retry", 0, "Number of retry")
+	RootCmd.PersistentFlags().StringVarP(&options.Proxy, "proxy", "P", "", "Proxy to send http request")
 	RootCmd.PersistentFlags().StringSliceVarP(&options.Headers, "headers", "H", []string{}, "Custom headers (e.g: -H 'Referer: {{.BaseURL}}') (Multiple -H flags are accepted)")
 
 	RootCmd.PersistentFlags().BoolVarP(&options.Verbose, "verbose", "v", false, "Verbose output")
@@ -85,12 +86,7 @@ func initConfig() {
 					urls = append(urls, url)
 				}
 			}
-			//
-			//// store stdin as a temp file
-			//urlFile := path.Join(options.TmpDir, fmt.Sprintf("raw-%s", utils.RandomString(8)))
-			//os.MkdirAll(options.TmpDir, 0755)
-			//utils.DebugF("Write stdin data to: %v", urlFile)
-			//utils.WriteToFile(urlFile, strings.Join(urls, "\n"))
+
 		}
 	}
 	inputs = urls
@@ -112,9 +108,9 @@ func HelpMessage(cmd *cobra.Command, _ []string) {
 	h += "  cat http_lists.txt | goverview probe -N -c 50 | tee only-overview.txt\n\n"
 	h += "  # Get summary content and store raw response without screenshot \n"
 	h += "  cat http_lists.txt | goverview probe -c 20 -M --json\n\n"
-	h += "  # Only do screenshot \n"
-	h += "  cat list_of_urls.txt | goverview --skip-probe \n\n"
-	h += "  # Do screnshot \n"
+	h += "  # Pass all urls to proxy with real browser\n"
+	h += "  cat list_of_urls.txt | goverview screen --proxy http://127.0.0.1:8080 \n\n"
+	h += "  # Do screenshot and store JSON Output\n"
 	h += "  cat http_lists.txt | goverview screen -c 5 --json\n\n"
 	h += "  # Do screnshot based on success HTTP site \n"
 	h += "  cat overview/target.com-http-overview.txt | jq -r '. | select(.status==\"200\") | .url' | goverview screen -c 5 -o overview -S overview/target.com-screen.txt\n\n"

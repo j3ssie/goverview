@@ -58,6 +58,10 @@ func BuildClient(options libs.Options) *resty.Client {
 		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 	})
 
+	if options.Proxy != "" {
+		client.SetProxy(options.Proxy)
+	}
+
 	client.SetHeaders(headers)
 	client.SetCloseConnection(true)
 	if options.Retry > 0 {

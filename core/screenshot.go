@@ -81,6 +81,10 @@ func DoScreenshot(options libs.Options, raw string) string {
 		chromedp.Flag("no-default-browser-check", true),
 	)
 
+	if options.Proxy != "" {
+		opts = append(opts, chromedp.ProxyServer(options.Proxy))
+	}
+
 	// create context
 	allocCtx, bcancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer bcancel()

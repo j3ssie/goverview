@@ -16,6 +16,7 @@ type Options struct {
 	Headers         []string
 	Inputs          []string
 	InputFile       string
+	Proxy       string
 	Timeout         int
 	Retry           int
 	Level           int
