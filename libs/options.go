@@ -16,7 +16,7 @@ type Options struct {
 	Headers         []string
 	Inputs          []string
 	InputFile       string
-	Proxy       string
+	Proxy           string
 	Timeout         int
 	Retry           int
 	Level           int
@@ -39,6 +39,10 @@ type Options struct {
 	Probe           ProbeOpt
 	Screen          ScreenOpt
 	Fin             FinOpt
+
+	// for report command
+	ReportFile   string
+	TemplateFile string
 }
 
 // ProbeOpt options for probing
@@ -52,6 +56,7 @@ type ScreenOpt struct {
 	ScreenOutput  string
 	ScreenTimeout int
 	ImgWidth      int
+	Retry         int
 	ImgHeight     int
 	UseChromedp   bool
 	UseRod        bool

@@ -11,7 +11,7 @@ GO111MODULE=on go get github.com/j3ssie/goverview
 ## Example Commands
 
 ```shell
-goverview - Overview about list of URLs - beta v0.4 by @j3ssiejjj
+goverview - Overview about list of URLs - beta v0.5 by @j3ssiejjj
 
 Usage:
   goverview [command]
@@ -19,6 +19,7 @@ Usage:
 Available Commands:
   help        Help about any command
   probe       Do Probing on target
+  report      Generate HTML Report based on screenshot output
   screen      Do Screenshot on target
 
 Flags:
@@ -69,8 +70,12 @@ Examples:
   # Do screenshot and store JSON Output
   cat http_lists.txt | goverview screen -c 5 --json
 
-  # Do screnshot based on success HTTP site
-  cat overview/target.com-http-overview.txt | jq -r '. | select(.status=="200") | .url' | goverview screen -c 5 -o overview -S overview/target.com-
+  # Do screenshot based on success HTTP site
+  cat overview/target.com-http-overview.txt | jq -r '. | select(.status=="200") | .url' | goverview screen -c 5 -o overview -S overview/target.com-screen.txt
+
+  # Do screenshot and generated report
+  cat http-shopee.io.txt| goverview screen --json -o /tmp/screenshot/
+  goverview report -o /tmp/screenshot/
 ```
 
 ## License
@@ -80,3 +85,5 @@ Examples:
 ## Donation
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/j3ssiejjj)
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/j3ssie)

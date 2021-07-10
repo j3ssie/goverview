@@ -25,6 +25,7 @@ func init() {
 	screenCmd.Flags().IntVar(&options.Screen.ScreenTimeout, "screen-timeout", 40, "screenshot timeout")
 	screenCmd.Flags().IntVar(&options.Screen.ImgHeight, "height", 0, "Height screenshot")
 	screenCmd.Flags().IntVar(&options.Screen.ImgWidth, "width", 0, "Width screenshot")
+	screenCmd.Flags().IntVar(&options.Screen.Retry, "retry", 3, "retry screenshot")
 	RootCmd.AddCommand(screenCmd)
 }
 
@@ -49,12 +50,9 @@ func runScreen(_ *cobra.Command, _ []string) error {
 		}
 
 		utils.InforF("[screenshot] %v", job)
-		var out string
-		if options.Screen.UseChromedp {
-			out = core.DoScreenshot(options, job)
-		} else {
-			out = core.NewDoScreenshot(options, job)
-		}
+
+		out := doScreen(job)
+
 		if out != "" {
 			fmt.Println(out)
 			core.AppendTo(options.ScreenShotFile, out)
@@ -72,4 +70,29 @@ func runScreen(_ *cobra.Command, _ []string) error {
 	wg.Wait()
 	printOutput()
 	return nil
+}
+
+func doScreen(job string) string {
+	var out string
+
+	if options.Screen.UseChromedp {
+		out = core.DoScreenshot(options, job)
+	} else {
+		out = core.NewDoScreenshot(options, job)
+	}
+
+	if out == "" {
+		for i := 0; i < options.Retry; i++ {
+			if options.Screen.UseChromedp {
+				out = core.DoScreenshot(options, job)
+			} else {
+				out = core.NewDoScreenshot(options, job)
+			}
+			if out != "" {
+				return out
+			}
+		}
+	}
+
+	return out
 }

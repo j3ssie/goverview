@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Goverview Report</title>
+    <link
+            rel="stylesheet"
+            href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css"
+    />
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.3/css/bootstrap.min.css"
+    />
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.1.1/css/mdb.min.css"
+    />
+</head>
+
+<style>
+    .view {
+        background: #fff;
+        margin: 20px;
+    }
+
+</style>
+<body>
+<div class="container">
+    <div class="row text-xs-center p-t-1 p-b-4">
+        <div class="col-md-12">
+            <br/>
+            <img
+                    alt="Jaeles"
+                    src="https://github.com/jaeles-project/jaeles-plugins/blob/master/assets/jaeles.png?raw=true"
+                    height="100"
+            />
+            <br/>
+            <br/>
+            <h4 class="text-title">
+                Goverview Screenshot Report
+            </h4>
+        </div>
+    </div>
+</div>
+
+<hr/>
+
+<!-- Start to generate data -->
+{{range .Contents}}
+
+<div class="view">
+    <div class="row">
+        <div class="col-md-6">
+            <a
+                    target="_blank"
+                    href="{{.URL}}"
+                    class="btn btn-primary btn-md"
+            ><i class="fa fa-external-link left"></i>{{.URL}}</a
+            >
+            &nbsp;
+            <a
+                    target="_blank"
+                    href="#"
+                    class="btn btn-secondary btn-md"
+            ><i class="fa fa-chevron-right left"></i>{{.Title}}</a
+            >
+            &nbsp;
+            <a
+                    target="_blank"
+                    href="#"
+                    class="btn btn-info btn-md"
+            ><i class="fa fa-info-circle left"></i> Status: {{.Status}}</a
+            >
+
+            &nbsp;
+            <a
+                    target="_blank"
+                    href="#"
+                    class="btn btn-info btn-md"
+            ><i class="fa fa-info-circle left"></i> Length: {{.Length}}</a
+            >
+
+            <br/>
+
+            <a target="_blank" href="#" class="btn btn-success btn-md"
+            ><i class="fa fa-code left"></i> {{.Tech}}</a
+            >
+            <br/>
+
+            <pre>
+{{.Header}}
+		</pre>
+
+        </div>
+
+        <div class="col-md-4">
+            <button class="btn btn-lg" data-toggle="modal" data-target="#{{.Checksum}}">
+                <img
+                        src="{{.ImgPath}}"
+                        height="600"
+                />
+            </button>
+        </div>
+
+        <!-- </div> -->
+    </div>
+
+
+    <div class="flex-center">
+        <!-- Modal -->
+        <div
+                class="modal fade"
+                id="{{.Checksum}}"
+                tabindex="-1"
+                role="dialog"
+                aria-labelledby="myModalLabel"
+                aria-hidden="true"
+        >
+
+            <div class="modal-dialog" role="document">
+                <!--Content-->
+                <img
+                        src="{{.ImgPath}}"
+                        class="img-fluid"
+                />
+            </div>
+        </div>
+    </div>
+
+    <hr/>
+</div>
+{{end}}
+
+
+<!-- footer -->
+<div class="container">
+    <div class="row text-xs-center py-4">
+
+        <div class="col-6 text-left">
+            <p class="text-title">
+              <strong
+              ><a href="https://github.com/j3ssie/goverview">Goverview is part of Osmedeus Professional</a></strong
+              >
+              is made with ♥ by
+              <a href="https://twitter.com/j3ssiejjj">@j3ssiejjj</a> and it is
+              released under the MIT license.
+            </p>
+            <p class="text-title">
+              <style>.bmc-button img{width: 27px !important;margin-bottom: 1px !important;box-shadow: none !important;border: none !important;vertical-align: middle !important;}.bmc-button{line-height: 36px !important;height:37px !important;text-decoration: none !important;display:inline-flex !important;color:#ffffff !important;background-color:#FF813F !important;border-radius: 3px !important;border: 1px solid transparent !important;padding: 1px 9px !important;font-size: 23px !important;letter-spacing: 0.6px !important;box-shadow: 0px 1px 2px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 1px 2px 2px rgba(190, 190, 190, 0.5) !important;margin: 0 auto !important;font-family:'Cookie', cursive !important;-webkit-box-sizing: border-box !important;box-sizing: border-box !important;-o-transition: 0.3s all linear !important;-webkit-transition: 0.3s all linear !important;-moz-transition: 0.3s all linear !important;-ms-transition: 0.3s all linear !important;transition: 0.3s all linear !important;}.bmc-button:hover, .bmc-button:active, .bmc-button:focus {-webkit-box-shadow: 0px 1px 2px 2px rgba(190, 190, 190, 0.5) !important;text-decoration: none !important;box-shadow: 0px 1px 2px 2px rgba(190, 190, 190, 0.5) !important;opacity: 0.85 !important;color:#ffffff !important;}</style><link href="https://fonts.googleapis.com/css?family=Cookie" rel="stylesheet"><a class="bmc-button" target="_blank" href="https://www.buymeacoffee.com/j3ssie"><img src="https://www.buymeacoffee.com/assets/img/BMC-btn-logo.svg" alt="Buy me a coffee"><span style="margin-left:5px">Buy me a coffee</span></a>
+            </p>
+        </div>
+        
+        <div class="col-6 text-right">
+            <p class="text-title">
+                Generated by
+                <strong
+                ><a href="https://opencollective.com/osmedeus"
+                >Goverview {{.Version}}</a
+                ></strong
+                >
+                at
+                <strong>{{.CurrentDay}}</strong>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- /.Outro -->
+<!-- partial -->
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.3.7/js/tether.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.3/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.1.1/js/mdb.min.js"></script>
+</body>
+</html>

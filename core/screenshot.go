@@ -118,12 +118,14 @@ func DoScreenshot(options libs.Options, raw string) string {
 	}
 
 	if res.StatusCode != 0 || len(res.Body) > 0 {
-		content = res.Status + "\n"
+		content = fmt.Sprintf("< HTTP/1.1 %v\n", res.Status)
 		for _, head := range res.Headers {
 			for k, v := range head {
 				content += fmt.Sprintf("< %s: %s\n", k, v)
 			}
 		}
+
+		content += "\n\n"
 		content += res.Body
 		_, err = WriteToFile(contentFile, content)
 		if options.Fin.Loaded {
@@ -172,8 +174,7 @@ func fullScreenshot(chromeContext context.Context, options libs.Options, urlstr 
 			// is the request we want the status/headers on?
 			if response.URL == uu {
 				res.StatusCode = int(response.Status)
-				res.Status = strings.TrimSpace(fmt.Sprintf("%v %v", res.StatusCode, response.StatusText))
-				//fmt.Printf(" url: %s\n", response.URL)
+				res.Status = response.StatusText
 				//fmt.Printf(" status code: %d\n", res.StatusCode)
 				for k, v := range response.Headers {
 					header := make(map[string]string)
@@ -247,16 +248,13 @@ func NewDoScreenshot(options libs.Options, raw string) string {
 		go browser.EachEvent(func(e *proto.NetworkResponseReceived) {
 			// only get event match base URL
 			if strings.HasPrefix(e.Response.URL, raw) {
-				//if e.Response.URL == raw {
 				screen.Status = e.Response.StatusText
+				content += fmt.Sprintf("< HTTP/1.1 %v", e.Response.StatusText)
 				for k, v := range e.Response.Headers {
 					content += fmt.Sprintf("< %s: %s\n", k, v)
 				}
 			}
-			//
-			//spew.Dump(e.Response.RequestHeaders)
-			//fmt.Println("Status: ", e.Response.Status, e.Response.URL, e.Response.Headers)
-			//spew.Dump(e.Response)
+
 		})()
 
 	})

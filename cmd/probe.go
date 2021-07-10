@@ -29,7 +29,6 @@ func init() {
 
 func runProbe(_ *cobra.Command, _ []string) error {
 	// prepare output
-	prepareOutput()
 	var wg sync.WaitGroup
 	client := core.BuildClient(options)
 	p, _ := ants.NewPoolWithFunc(options.Concurrency, func(i interface{}) {

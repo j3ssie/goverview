@@ -90,6 +90,7 @@ func initConfig() {
 		}
 	}
 	inputs = urls
+	prepareOutput()
 }
 
 // HelpMessage print help message
@@ -107,12 +108,19 @@ func HelpMessage(cmd *cobra.Command, _ []string) {
 	h += "  # Only get summary \n"
 	h += "  cat http_lists.txt | goverview probe -N -c 50 | tee only-overview.txt\n\n"
 	h += "  # Get summary content and store raw response without screenshot \n"
+
 	h += "  cat http_lists.txt | goverview probe -c 20 -M --json\n\n"
 	h += "  # Pass all urls to proxy with real browser\n"
+
 	h += "  cat list_of_urls.txt | goverview screen --proxy http://127.0.0.1:8080 \n\n"
 	h += "  # Do screenshot and store JSON Output\n"
+
 	h += "  cat http_lists.txt | goverview screen -c 5 --json\n\n"
-	h += "  # Do screnshot based on success HTTP site \n"
+	h += "  # Do screenshot based on success HTTP site \n"
 	h += "  cat overview/target.com-http-overview.txt | jq -r '. | select(.status==\"200\") | .url' | goverview screen -c 5 -o overview -S overview/target.com-screen.txt\n\n"
+
+	h += "  # Do screenshot and generated report \n"
+	h += "  cat http-shopee.io.txt| goverview screen --json -o /tmp/screenshot/ \n"
+	h += "  goverview report -o /tmp/screenshot/\n\n"
 	fmt.Printf(h)
 }

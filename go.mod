@@ -16,6 +16,7 @@ require (
 	github.com/gocolly/colly v1.2.0
 	github.com/json-iterator/go v1.1.11
 	github.com/kennygrant/sanitize v1.2.4 // indirect
+	github.com/markbates/pkger v0.17.1
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/onsi/ginkgo v1.16.4 // indirect
