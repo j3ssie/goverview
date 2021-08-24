@@ -1,6 +1,6 @@
 goverview
 =========
-goverview - Get overview about list of URLs
+goverview - Get an overview of the list of URLs
 
 ## Installation
 
@@ -8,10 +8,38 @@ goverview - Get overview about list of URLs
 GO111MODULE=on go get github.com/j3ssie/goverview
 ```
 
+## Demo
+
+[![asciicast](https://asciinema.org/a/432045.svg)](https://asciinema.org/a/432045)
+
 ## Example Commands
 
 ```shell
-goverview - Overview about list of URLs - beta v0.5 by @j3ssiejjj
+# Only get summary
+cat http_lists.txt | goverview probe -N -c 50 | tee only-overview.txt
+
+# Get summary content and store raw response without screenshot
+cat http_lists.txt | goverview probe -M -c 50 -o overview  cat http_lists.txt | goverview probe -c 20 -M --json
+
+# Pass all urls to proxy with real browser
+cat list_of_urls.txt | goverview screen --proxy http://127.0.0.1:8080
+
+# Do screenshot and store JSON Output
+cat http_lists.txt | goverview screen -c 5 --json
+
+# Do screenshot based on success HTTP site
+cat overview/target.com-http-overview.txt | jq -r '. | select(.status=="200") | .url' | goverview screen -c 5 -o overview -S overview/target.com-screen.txt
+
+# Do screenshot and generated report
+cat http-shopee.io.txt| goverview screen --json -o /tmp/screenshot/
+goverview report -o /tmp/screenshot/
+
+```
+
+## Usage
+
+```shell
+goverview - Get an overview of the list of URLs - beta v1.0.0 by @j3ssiejjj
 
 Usage:
   goverview [command]
@@ -57,25 +85,6 @@ Checksum Content Level:
   2 - Check for all structure of HTML tag + src in <script> <img> <a> tag
   5 - Entire HTTP response
 
-Examples:
-  # Only get summary
-  cat http_lists.txt | goverview probe -N -c 50 | tee only-overview.txt
-
-  # Get summary content and store raw response without screenshot
-  cat http_lists.txt | goverview probe -c 20 -M --json
-
-  # Pass all urls to proxy with real browser
-  cat list_of_urls.txt | goverview screen --proxy http://127.0.0.1:8080
-
-  # Do screenshot and store JSON Output
-  cat http_lists.txt | goverview screen -c 5 --json
-
-  # Do screenshot based on success HTTP site
-  cat overview/target.com-http-overview.txt | jq -r '. | select(.status=="200") | .url' | goverview screen -c 5 -o overview -S overview/target.com-screen.txt
-
-  # Do screenshot and generated report
-  cat http-shopee.io.txt| goverview screen --json -o /tmp/screenshot/
-  goverview report -o /tmp/screenshot/
 ```
 
 ## License

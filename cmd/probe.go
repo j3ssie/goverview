@@ -23,7 +23,7 @@ func init() {
 	}
 	probeCmd.Flags().BoolVarP(&options.SaveReponse, "save-response", "M", false, "Save HTTP response")
 	probeCmd.Flags().BoolVarP(&options.Probe.OnlySummary, "no-output", "N", false, "Only store summary file")
-	probeCmd.Flags().BoolVar(&options.Probe.WordsSummary, "words", false, "Get words from ")
+	probeCmd.Flags().BoolVar(&options.Probe.WordsSummary, "words", false, "Get words from response too")
 	RootCmd.AddCommand(probeCmd)
 }
 
@@ -46,50 +46,13 @@ func runProbe(_ *cobra.Command, _ []string) error {
 		out := core.Sending(options, job, client)
 		if out != "" {
 			fmt.Println(out)
-			if options.Probe.OnlySummary || !options.NoOutput {
+			if !options.Probe.OnlySummary {
 				core.AppendTo(options.ContentFile, out)
 			}
-			// only print output but not store it into a file
-			//utils.InforF("[checksum] %v - %v", job, out)
 		}
 
 	}, ants.WithPreAlloc(true))
 	defer p.Release()
-
-	//
-	//jobs := make(chan string, options.Concurrency)
-	//
-	//client := core.BuildClient(options)
-	//if !options.SkipProbe {
-	//	// do probing
-	//	for i := 0; i < options.Concurrency; i++ {
-	//		wg.Add(1)
-	//		go func() {
-	//			defer wg.Done()
-	//			for job := range jobs {
-	//				// parsing Burp base64 to a URL
-	//				if options.InputAsBurp {
-	//					job = core.ParseBurpRequest(job)
-	//				}
-	//				if job == "" {
-	//					continue
-	//				}
-	//				utils.InforF("[probing] %v", job)
-	//				out := core.CalcCheckSum(options, job, client)
-	//				if out != "" {
-	//					// only print output but not store it into a file
-	//					if options.NoOutput {
-	//						fmt.Println(out)
-	//						continue
-	//					}
-	//
-	//					utils.InforF("[checksum] %v - %v", job, out)
-	//					core.AppendTo(options.ContentFile, out)
-	//				}
-	//			}
-	//		}()
-	//	}
-	//}
 
 	for _, raw := range inputs {
 		wg.Add(1)
@@ -110,7 +73,7 @@ func prepareOutput() {
 		os.Exit(-1)
 	}
 
-	if options.NoOutput {
+	if options.Probe.OnlySummary {
 		options.SaveRedirectURL = true
 		options.Output = ""
 		return

@@ -14,7 +14,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// Overview overview struct
+// Overview overview data
 type Overview struct {
 	URL           string `json:"url"`
 	Title         string `json:"title"`
@@ -24,6 +24,8 @@ type Overview struct {
 	ResponseTime  string `json:"time"`
 	ContentLength string `json:"length"`
 	Redirect      string `json:"redirect"`
+	Headers       string `json:"headers"`
+	Favicon       string `json:"favicon"`
 }
 
 // PrintOverview print probe string
@@ -77,6 +79,7 @@ func CalcCheckSum(options libs.Options, url string, res libs.Response) Overview 
 
 	// store response
 	content := res.BeautifyHeader
+	overview.Headers = res.BeautifyHeader
 	if options.SaveReponse {
 		content += "\n\n" + res.Body
 	}
@@ -143,7 +146,7 @@ func CalcCheckSum(options libs.Options, url string, res libs.Response) Overview 
 	return overview
 }
 
-// Sending sending request and calculate checksum
+// Sending send request and calculate checksum
 func Sending(options libs.Options, url string, client *resty.Client) string {
 
 	res, err := JustSend(options, url, client)
@@ -153,7 +156,13 @@ func Sending(options libs.Options, url string, client *resty.Client) string {
 		utils.ErrorF("Error sending: %v", url)
 		return ""
 	}
+
 	overview := CalcCheckSum(options, url, res)
+	favIconHashed := GetFavHash(url)
+	if favIconHashed != "" {
+		overview.Favicon = favIconHashed
+	}
+
 	return PrintOverview(options, overview)
 }
 

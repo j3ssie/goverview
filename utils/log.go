@@ -16,25 +16,6 @@ var logger = logrus.New()
 
 // InitLog init log
 func InitLog(options *libs.Options) {
-	//dir := "/tmp/osm-log/"
-	//if options.LogFile == "" {
-	//	if !FolderExists(dir) {
-	//		os.MkdirAll(dir, 0755)
-	//	}
-	//	tmpFile, _ := ioutil.TempFile(dir, "osmedeus-*.log")
-	//	options.LogFile = tmpFile.Name()
-	//}
-	//dir = filepath.Dir(options.LogFile)
-	//if !FolderExists(dir) {
-	//	os.MkdirAll(dir, 0755)
-	//}
-	//f, err := os.OpenFile(options.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	//if err != nil {
-	//	logger.Errorf("error opening file: %v", err)
-	//}
-
-	// defer f.Close()
-	//mwr := io.MultiWriter(os.Stdout, f)
 	logger.SetLevel(logrus.InfoLevel)
 	logger = &logrus.Logger{
 		Out: os.Stderr,

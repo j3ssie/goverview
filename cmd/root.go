@@ -16,7 +16,7 @@ var inputs []string
 var RootCmd = &cobra.Command{
 	Use:   "goverview",
 	Short: "goverview",
-	Long:  fmt.Sprintf("goverview - Get overview about list of URLs - %v by %v", libs.VERSION, libs.AUTHOR),
+	Long:  fmt.Sprintf("goverview - Get an overview of the list of URLs - %v by %v", libs.VERSION, libs.AUTHOR),
 }
 
 // Execute main function
@@ -95,7 +95,7 @@ func initConfig() {
 
 // HelpMessage print help message
 func HelpMessage(cmd *cobra.Command, _ []string) {
-	h := fmt.Sprintf("goverview - Overview about list of URLs - %v by %v\n\n", libs.VERSION, libs.AUTHOR)
+	h := fmt.Sprintf("goverview - Get an overview of the list of URLs - %v by %v\n\n", libs.VERSION, libs.AUTHOR)
 	h += cmd.UsageString()
 
 	h += "\n\nChecksum Content Level:\n"
@@ -106,16 +106,17 @@ func HelpMessage(cmd *cobra.Command, _ []string) {
 
 	h += "\n\nExamples:\n"
 	h += "  # Only get summary \n"
-	h += "  cat http_lists.txt | goverview probe -N -c 50 | tee only-overview.txt\n\n"
+	h += "  cat http_lists.txt | goverview probe -N -c 50 --json | tee only-overview.txt\n\n"
+
 	h += "  # Get summary content and store raw response without screenshot \n"
-
 	h += "  cat http_lists.txt | goverview probe -c 20 -M --json\n\n"
+
 	h += "  # Pass all urls to proxy with real browser\n"
-
 	h += "  cat list_of_urls.txt | goverview screen --proxy http://127.0.0.1:8080 \n\n"
-	h += "  # Do screenshot and store JSON Output\n"
 
+	h += "  # Do screenshot and store JSON Output\n"
 	h += "  cat http_lists.txt | goverview screen -c 5 --json\n\n"
+
 	h += "  # Do screenshot based on success HTTP site \n"
 	h += "  cat overview/target.com-http-overview.txt | jq -r '. | select(.status==\"200\") | .url' | goverview screen -c 5 -o overview -S overview/target.com-screen.txt\n\n"
 
