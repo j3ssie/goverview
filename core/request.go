@@ -222,6 +222,14 @@ func BeautifyHeaders(res libs.Response) string {
 	beautifyHeader := fmt.Sprintf("< %v \n", res.Status)
 	for _, header := range res.Headers {
 		for key, value := range header {
+
+			// @TODO: ignore too long csp here
+			if strings.Contains(strings.ToLower(key), "content-security-policy") {
+				if len(value) > 100 {
+					continue
+				}
+			}
+
 			beautifyHeader += fmt.Sprintf("< %v: %v\n", key, value)
 		}
 	}
