@@ -1,7 +1,9 @@
 package core
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/markbates/pkger"
 	"io"
 	"net/http"
 	"os"
@@ -130,17 +132,30 @@ func DownloadFile(from, to string) error {
 	return err
 }
 
-// load apps from file
+// LoadApps load apps from file
 func (wa *WebAnalyzer) LoadApps(filename string) error {
-	f, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
+	if filename == "" {
+		f, err := pkger.Open("/static/technologies.json")
+		if err != nil {
+			return fmt.Errorf("blank tech file")
+		}
 
-	dec := jsoniter.NewDecoder(f)
-	if err = dec.Decode(&wa.AppDefs); err != nil {
-		return err
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(f)
+
+		if err = jsoniter.UnmarshalFromString(buf.String(), &wa.AppDefs); err != nil {
+			return err
+		}
+	} else {
+		f, err := os.Open(filename)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		dec := jsoniter.NewDecoder(f)
+		if err = dec.Decode(&wa.AppDefs); err != nil {
+			return err
+		}
 	}
 
 	for key, value := range wa.AppDefs.Apps {

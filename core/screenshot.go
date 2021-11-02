@@ -127,7 +127,11 @@ func DoScreenshot(options libs.Options, raw string) string {
 
 		content += "\n\n"
 		content += res.Body
-		_, err = WriteToFile(contentFile, content)
+
+		if options.Output != "" {
+			WriteToFile(contentFile, content)
+		}
+
 		if options.Fin.Loaded {
 			techs := LocalFingerPrint(options, contentFile)
 			screen.Technologies = techs
@@ -135,9 +139,11 @@ func DoScreenshot(options libs.Options, raw string) string {
 	}
 
 	// write image
-	if err := ioutil.WriteFile(imageScreen, buf, 0644); err != nil {
-		utils.ErrorF("write screen err: %v - %v", raw, err)
-		return PrintScreen(options, screen)
+	if options.Output != "" {
+		if err := ioutil.WriteFile(imageScreen, buf, 0644); err != nil {
+			utils.ErrorF("write screen err: %v - %v", raw, err)
+			return PrintScreen(options, screen)
+		}
 	}
 
 	screen.Image = imageScreen

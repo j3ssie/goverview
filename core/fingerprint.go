@@ -54,7 +54,7 @@ func (m *Match) updateVersion(version string) {
 	}
 }
 
-// LoadTechs
+// LoadTechs load technology
 func LoadTechs(options libs.Options) error {
 	WA = new(WebAnalyzer)
 	if err := WA.LoadApps(options.Fin.TechFile); err != nil {

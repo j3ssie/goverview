@@ -67,10 +67,12 @@ func runProbe(_ *cobra.Command, _ []string) error {
 }
 
 func prepareOutput() {
-	if options.NoOutput && !options.SkipScreen {
-		utils.ErrorF("Can't disable output without skip screenshot")
-		fmt.Fprintf(os.Stderr, "Command should be: goverview -N -Q ...\n")
-		os.Exit(-1)
+	if options.NoOutput {
+		//fmt.Fprintf(os.Stderr, "Can't disable output without skip screenshot")
+		//fmt.Fprintf(os.Stderr, "Command should be: goverview -N -Q ...\n")
+		//os.Exit(-1)
+		options.Output = ""
+		return
 	}
 
 	if options.Probe.OnlySummary {
