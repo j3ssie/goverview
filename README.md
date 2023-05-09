@@ -5,7 +5,7 @@ goverview - Get an overview of the list of URLs
 ## Installation
 
 ```
-GO111MODULE=on go get github.com/j3ssie/goverview
+go install github.com/j3ssie/goverview@latest
 ```
 
 ## Demo
