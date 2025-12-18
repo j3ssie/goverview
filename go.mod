@@ -22,7 +22,7 @@ require (
 	github.com/onsi/gomega v1.16.0 // indirect
 	github.com/panjf2000/ants v1.3.0
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.8.3
 	github.com/spf13/cobra v1.2.1
 	github.com/temoto/robotstxt v1.1.2 // indirect
 	github.com/twmb/murmur3 v1.1.6
